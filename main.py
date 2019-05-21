@@ -64,14 +64,21 @@ def open_ports():
         return opened_port
 
     print(100 * '-')
-    for input_port in INPUT_DEVICES:
-        port = open_port('input', input_port)
+
+    input_devices = [
+        j for i in INPUT_DEVICES for j in mido.get_input_names() if i in j]
+    for input_device in input_devices:
+        port = open_port('input', input_device)
         if port is not None:
             inports.append(port)
-    for output_port in OUTPUT_DEVICES:
-        port = open_port('output', output_port)
+
+    output_devices = [
+        j for i in OUTPUT_DEVICES for j in mido.get_output_names() if i in j]
+    for output_device in output_devices:
+        port = open_port('output', output_device)
         if port is not None:
             outports.append(port)
+
     print(100 * '-')
     return inports, outports
 
