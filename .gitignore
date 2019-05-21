@@ -1,0 +1,15 @@
+# app
+logs/
+
+# dev
+.coverage
+.cache/
+*.pyc
+__pycache__
+
+# IntelliJ ignores
+.idea
+
+# OS specific
+.DS_Store
+Thumbs.db
