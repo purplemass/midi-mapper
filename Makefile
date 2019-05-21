@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 run:
-	python main.py
+	python3 main.py
 
 put:
 	scp main.py pi@192.168.1.17:/home/pi/

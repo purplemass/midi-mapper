@@ -1,4 +1,6 @@
 """
+Translate midi messages between input/output devices.
+
 References:
     https://mido.readthedocs.io/en/latest/ports.html
     https://www.bome.com/forums/viewtopic.php?t=2832
@@ -9,23 +11,7 @@ import time
 import mido
 from mido.ports import MultiPort
 
-INPUT_DEVICES = ['Faderfox UC4', 'XONE:K2', ]
-OUTPUT_DEVICES = ['Circuit', ]
-
-CONTROLS = {
-    16: {
-        'control': 12,
-        'description': 'Synth1 Volume',
-        'in_channel': 14,
-        'out_channel': 15,
-    },
-    17: {
-        'control': 14,
-        'description': 'Synth2 Volume',
-        'in_channel': 14,
-        'out_channel': 15,
-    },
-}
+from config import INPUT_DEVICES, OUTPUT_DEVICES, CONTROLS
 
 
 def main_loop():
@@ -38,7 +24,7 @@ def main_loop():
             extra = ''
             midi_msg = msg
             for key, details in CONTROLS.items():
-                if control == key:
+                if control == key and msg.channel == details['in_channel']:
                     extra = '==> CH:{:>2} Control:{:>3}'.format(
                         details['out_channel'], details['control'])
                     midi_msg = mido.Message(
