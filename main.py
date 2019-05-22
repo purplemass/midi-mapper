@@ -24,25 +24,33 @@ def main():
             control, level = get_msg_details(msg)
             extra = ''
             for key, details in CONTROLS.items():
-                if (int(control) == int(key) and
+                if (control == int(key) and
                         msg.channel == int(details['in_channel'])):
-                    extra = '==> CH:{:>2} Control:{:>3}'.format(
-                        details['out_channel'], details['control'])
-                    if (isinstance(details['control'], str) and
-                            '>' in details['control']):
-                        nrpn(outports, details['control'], level)
+
+                    translate = details['translate']
+                    out_channel = details['out_channel']
+
+                    if (isinstance(translate, str) and '>' in translate):
+                        send_nrpn(outports, out_channel, translate, level)
                     else:
                         msg = mido.Message(
-                            channel=int(details['out_channel']),
-                            control=int(details['control']),
+                            channel=int(out_channel),
+                            control=int(translate),
                             value=level,
                             type=msg.type,
                         )
+                        send_out(outports, msg)
+
+                    extra = '==> CH:{:>2} Control:{:>3}'.format(
+                        out_channel, translate)
                     break
 
-            send(outports, msg)
+            # send untranslated messages
+            if extra == '':
+                send_out(outports, msg)
+
             print("CH:{:>2} Control:{:>3} Value:{:>3} [{}] {}".format(
-                msg.channel,
+                details['in_channel'],
                 control,
                 level,
                 'CC' if msg.type == 'control_change' else 'NT',
@@ -50,7 +58,7 @@ def main():
             ))
 
 
-def nrpn(outports, control, level):
+def send_nrpn(outports, channel, control, level):
     """Send NRPN message of this format:
 
         MIDI # 16 CC 99 = control[0]
@@ -61,21 +69,22 @@ def nrpn(outports, control, level):
     control = control.split('>')
     if len(control) != 2:
         return
+    cc = 'control_change'
     msg = mido.Message(
-        channel=15, control=99, value=int(control[0]), type='control_change')
-    send(outports, msg)
+        channel=channel, control=99, value=int(control[0]), type=cc)
+    send_out(outports, msg)
     msg = mido.Message(
-        channel=15, control=98, value=int(control[1]), type='control_change')
-    send(outports, msg)
+        channel=channel, control=98, value=int(control[1]), type=cc)
+    send_out(outports, msg)
     msg = mido.Message(
-        channel=15, control=6, value=level, type='control_change')
-    send(outports, msg)
+        channel=channel, control=6, value=level, type=cc)
+    send_out(outports, msg)
     msg = mido.Message(
-        channel=15, control=38, value=0, type='control_change')
-    send(outports, msg)
+        channel=channel, control=38, value=0, type=cc)
+    send_out(outports, msg)
 
 
-def send(outports, msg):
+def send_out(outports, msg):
     """Send to message all outputs."""
     for outport in outports:
         outport.send(msg)

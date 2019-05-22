@@ -4,7 +4,10 @@ run:
 	python3 main.py
 
 put:
-	scp main.py pi@192.168.1.17:/home/pi/
+	scp main.py config.py pi@192.168.1.17:/home/pi/
 
-get:
+get-config:
+	scp pi@192.168.1.17:/home/pi/main.py .
+
+get-main:
 	scp pi@192.168.1.17:/home/pi/main.py .
