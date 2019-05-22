@@ -25,16 +25,16 @@ def main():
             extra = ''
             for key, details in CONTROLS.items():
                 if (control == int(key) and
-                        msg.channel == int(details['in_channel'])):
+                        msg.channel == int(details['in_channel']) - 1):
 
                     translate = details['translate']
-                    out_channel = details['out_channel']
+                    out_channel = int(details['out_channel'])
 
                     if (isinstance(translate, str) and '>' in translate):
-                        send_nrpn(outports, out_channel, translate, level)
+                        send_nrpn(outports, out_channel - 1, translate, level)
                     else:
                         msg = mido.Message(
-                            channel=int(out_channel),
+                            channel=out_channel - 1,
                             control=int(translate),
                             value=level,
                             type=msg.type,
