@@ -14,7 +14,8 @@ from mido.ports import MultiPort
 from config import INPUT_DEVICES, OUTPUT_DEVICES, CONTROLS
 
 
-def main_loop():
+def main():
+    """Main loop where messages are read from inputs and processed."""
     inports, outports = open_ports()
     multi = MultiPort(inports)
     while True:
@@ -22,21 +23,24 @@ def main_loop():
         for msg in multi.iter_pending():
             control, level = get_msg_details(msg)
             extra = ''
-            midi_msg = msg
             for key, details in CONTROLS.items():
-                if control == key and msg.channel == details['in_channel']:
+                if (int(control) == int(key) and
+                        msg.channel == int(details['in_channel'])):
                     extra = '==> CH:{:>2} Control:{:>3}'.format(
                         details['out_channel'], details['control'])
-                    midi_msg = mido.Message(
-                        channel=details['out_channel'],
-                        control=details['control'],
-                        value=level,
-                        type=msg.type,
-                    )
+                    if (isinstance(details['control'], str) and
+                            '>' in details['control']):
+                        nrpn(outports, details['control'], level)
+                    else:
+                        msg = mido.Message(
+                            channel=int(details['out_channel']),
+                            control=int(details['control']),
+                            value=level,
+                            type=msg.type,
+                        )
                     break
-            for outport in outports:
-                outport.send(midi_msg)
 
+            send(outports, msg)
             print("CH:{:>2} Control:{:>3} Value:{:>3} [{}] {}".format(
                 msg.channel,
                 control,
@@ -44,6 +48,37 @@ def main_loop():
                 'CC' if msg.type == 'control_change' else 'NT',
                 extra,
             ))
+
+
+def nrpn(outports, control, level):
+    """Send NRPN message of this format:
+
+        MIDI # 16 CC 99 = control[0]
+        MIDI # 16 CC 98 = control[1]
+        MIDI # 16 CC 6 = level
+        MIDI # 16 CC 38 = 0
+    """
+    control = control.split('>')
+    if len(control) != 2:
+        return
+    msg = mido.Message(
+        channel=15, control=99, value=int(control[0]), type='control_change')
+    send(outports, msg)
+    msg = mido.Message(
+        channel=15, control=98, value=int(control[1]), type='control_change')
+    send(outports, msg)
+    msg = mido.Message(
+        channel=15, control=6, value=level, type='control_change')
+    send(outports, msg)
+    msg = mido.Message(
+        channel=15, control=38, value=0, type='control_change')
+    send(outports, msg)
+
+
+def send(outports, msg):
+    """Send to message all outputs."""
+    for outport in outports:
+        outport.send(msg)
 
 
 def open_ports():
@@ -88,11 +123,6 @@ def get_msg_details(msg):
     control = msg.control if hasattr(msg, 'control') else msg.note
     level = msg.value if hasattr(msg, 'value') else msg.velocity
     return control, level
-
-
-def main():
-    """"""
-    main_loop()
 
 
 if __name__ == "__main__":

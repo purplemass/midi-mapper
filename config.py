@@ -15,6 +15,18 @@ CONTROLS = {
         'out_channel': 15,
         'description': 'Synth2 Volume',
     },
+    18: {
+        'in_channel': 14,
+        'control': '1>8',
+        'out_channel': 15,
+        'description': 'Synth2 Volume',
+    },
+    19: {
+        'in_channel': 14,
+        'control': '1>9',
+        'out_channel': 15,
+        'description': 'Synth2 Volume',
+    },
     56: {
         'in_channel': 1,
         'control': 12,
