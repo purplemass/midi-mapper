@@ -1,0 +1,47 @@
+{
+  "outputs": {
+    "Circuit": {}
+  },
+  "inputs": {
+    "Faderfox UC4": {
+      "channel": 4,
+      "controls": {
+        "56": {
+          "translate": 12,
+          "channel": 16,
+          "description": "Synth1 Volume"
+        },
+        "57": {
+          "translate": 14,
+          "channel": 16,
+          "description": "Synth2 Volume"
+        }
+      }
+    },
+    "XONE:K2": {
+      "channel": 15,
+      "controls": {
+        "16": {
+          "translate": 12,
+          "channel": 16,
+          "description": "Synth1 Volume"
+        },
+        "17": {
+          "translate": 14,
+          "channel": 16,
+          "description": "Synth2 Volume"
+        },
+        "18": {
+          "translate": "1>8",
+          "channel": 16,
+          "description": "Synth2 Volume"
+        },
+        "19": {
+          "translate": "1>9",
+          "channel": 16,
+          "description": "Synth2 Volume"
+        }
+      }
+    }
+  }
+}
