@@ -32,7 +32,7 @@ class Device(object):
             self.port = self._get_port()
             print('"{}" connected as "{}"'.format(self.name, self.midi_name))
         except OSError:
-            print('Could not connect to "{}"'.format(self.name))
+            print('Error: Could not connect to "{}"'.format(self.name))
 
 
 class InputDevice(Device):
@@ -86,7 +86,8 @@ class DeviceManager(object):
             device = InputDevice(my_input, config.get_device_info(my_input))
             input_devices.append(device)
             self.input_lookup[device.channel] = device
-            input_ports.append(device.port)
+            if device.port is not None:
+                input_ports.append(device.port)
         for my_output in config.get_outputs():
             device = OutputDevice(my_output, config.get_device_info(my_output))
             self.output_ports.append(device.port)
