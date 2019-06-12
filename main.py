@@ -5,6 +5,34 @@ References:
     https://mido.readthedocs.io/en/latest/ports.html
     https://www.bome.com/forums/viewtopic.php?t=2832
     https://www.dataquest.io/blog/python-dictionary-tutorial/
+
+X-Touch Rx Data:
+        # change mode
+        msg = mido.Message(
+            channel=0,
+            control=127,
+            value=0,  # 0=MC or 1=Standard
+            type='control_change',
+        )
+        # change layer
+        msg = mido.Message(
+            channel=0,
+            program=1,  # 0=LayerA 1=LayerB
+            type='program_change',
+        )
+        # change LED ring
+        msg = mido.Message(
+            channel=0,
+            control=2,
+            value=2,
+            type='control_change',
+        )
+        # change button LED
+        msg = mido.Message(
+            channel=0,
+            note=0,
+            type='note_on',
+        )
 """
 import json
 import os
@@ -96,6 +124,8 @@ class DeviceManager(object):
     def _get_msg_details(self, msg):
         """Get message control and level.
         These are different for notes and CC messages"""
+        if msg.type == 'pitchwheel':
+            return msg.pitch, msg.pitch
         control = msg.control if hasattr(msg, 'control') else msg.note
         level = msg.value if hasattr(msg, 'value') else msg.velocity
         return control, level
@@ -133,7 +163,42 @@ class DeviceManager(object):
             channel=channel, control=38, value=0, type=cc)
         self._send_midi(msg)
 
+    def _compose_message(self, channel, translate, level, mtype):
+
+        def note():
+            return mido.Message(
+                channel=channel,
+                note=int(translate),
+                velocity=level,
+                type=mtype,
+            )
+
+        def control_change():
+            return mido.Message(
+                channel=channel,
+                control=int(translate),
+                value=level,
+                type=mtype,
+            )
+
+        def program_change():
+            return mido.Message(
+                channel=channel,
+                program=int(translate),
+                type='program_change',
+            )
+
+        switcher = {
+            'note_on': note,
+            'note_off': note,
+            'control_change': control_change,
+            'program_change': program_change,
+        }
+        return switcher.get(mtype, None)()
+
     def _process_message(self, msg):
+        translate = None
+        translated_msg = None
         control, level = self._get_msg_details(msg)
         log1 = "CH:{:>2} Control:{:>3} [{:>3} {}]".format(
             msg.channel + 1,
@@ -152,12 +217,8 @@ class DeviceManager(object):
                 if nrpn is True:
                     self._send_nrpn(channel, translate, level)
                 else:
-                    msg = mido.Message(
-                        channel=channel,
-                        control=int(translate),
-                        value=level,
-                        type=msg.type,
-                    )
+                    translated_msg = self._compose_message(
+                        channel, translate, level, msg.type)
                 log2 = '==> CH:{:>2} Control:{:>3}'.format(
                     channel + 1, translate)
 
@@ -165,7 +226,17 @@ class DeviceManager(object):
             pass
 
         if nrpn is not True:
-            self._send_midi(msg)
+            self._send_midi(
+                translated_msg if translated_msg is not None else msg)
+
+        # send to self
+        if msg.type == 'note_off' and translate == control:
+            ret_msg = mido.Message(
+                channel=msg.channel,
+                note=msg.note,
+                type='note_on',
+            )
+            self._send_midi(ret_msg)
 
         print("{} {}".format(log1, log2))
 

@@ -1,17 +1,132 @@
 {
   "outputs": {
-    "Circuit": {}
+    "Circuit": {},
+    "X-TOUCH MINI": {}
   },
   "inputs": {
-    "Faderfox UC4": {
-      "channel": 4,
+    "X-TOUCH MINI": {
+      "channel": 11,
       "controls": {
-        "56": {
+        "": "<================ LAYER A ================>",
+        "1": {
           "translate": 12,
           "channel": 16,
           "description": "Synth1 Volume"
         },
-        "57": {
+        "2": {
+          "translate": 14,
+          "channel": 16,
+          "description": "Synth2 Volume"
+        },
+        "3": {
+          "translate": 111,
+          "channel": 16,
+          "description": "synth1 send level"
+        },
+        "4": {
+          "translate": 112,
+          "channel": 16,
+          "description": "synth2 send level"
+        },
+        "5": {
+          "translate": "1>8",
+          "channel": 16,
+          "description": "Delay feedback"
+        },
+        "6": {
+          "translate": "1>9",
+          "channel": 16,
+          "description": "Delay width"
+        },
+        "7": {
+          "translate": "1>10",
+          "channel": 16,
+          "description": "left-right ratio"
+        },
+        "8": {
+          "translate": "1>11",
+          "channel": 16,
+          "description": "slew rate"
+        },
+        "": "<================ BUTTON A1 ================>",
+        "32": {
+          "translate": 32,
+          "channel": 11,
+          "description": "Bank B1"
+        },
+        "": "<================ FADER ================>",
+        "9": {
+          "translate": 74,
+          "channel": 16,
+          "description": "Master Filter"
+        },
+        "10": {
+          "translate": 80,
+          "channel": 1,
+          "description": "Macro Knob 1"
+        },
+        "10-": {
+          "translate": 74,
+          "channel": 16,
+          "description": "Master Filter"
+        },
+        "": "<================ LAYER B ================>",
+        "11": {
+          "translate": 51,
+          "channel": 2,
+          "description": "Synth1 Volume"
+        },
+        "12": {
+          "translate": 52,
+          "channel": 2,
+          "description": "Synth2 Volume"
+        },
+        "13": {
+          "translate": 24,
+          "channel": 2,
+          "description": "synth1 send level"
+        },
+        "14": {
+          "translate": 35,
+          "channel": 2,
+          "description": "synth2 send level"
+        },
+        "15": {
+          "translate": 112,
+          "channel": 16,
+          "description": "Delay feedback"
+        },
+        "16": {
+          "translate": 89,
+          "channel": 16,
+          "description": "Delay width"
+        },
+        "17": {
+          "translate": 54,
+          "channel": 2,
+          "description": "left-right ratio"
+        },
+        "18": {
+          "translate": 14,
+          "channel": 16,
+          "description": "slew rate"
+        }
+      }
+    },
+    "Faderfox UC4": {
+      "channel": 4,
+      "controls": {
+        "15": {
+          "translate": 2,
+          "channel": 11,
+          "description": "Synth1 Volume"
+        },
+        "14": {
+          "translate": 51,
+          "channel": 2,
+          "description": "Synth1 Volume"
+        },
+        "15-": {
           "translate": 14,
           "channel": 16,
           "description": "Synth2 Volume"
@@ -34,12 +149,12 @@
         "18": {
           "translate": "1>8",
           "channel": 16,
-          "description": "Synth2 Volume"
+          "description": "Delay feedback"
         },
         "19": {
           "translate": "1>9",
           "channel": 16,
-          "description": "Synth2 Volume"
+          "description": "Delay width"
         }
       }
     }
