@@ -103,7 +103,8 @@ class DeviceManager(object):
     def _send_midi(self, msg):
         """Send to message to all outputs."""
         for outport in self.output_ports:
-            outport.send(msg)
+            if outport is not None:
+                outport.send(msg)
 
     def _send_nrpn(self, channel, control, level):
         """Send NRPN message of the format below to all ports:
