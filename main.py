@@ -36,12 +36,15 @@ X-Touch Rx Data:
 """
 import json
 import os
+import signal
+import sys
 import time
 
 import mido
 from mido.ports import MultiPort
 
 CONFIG_FILE = './config.json'
+SPECIAL_COMMANDS = ['RELOAD']
 
 
 class Device(object):
@@ -100,24 +103,30 @@ class OutputDevice(Device):
 class DeviceManager(object):
     """DeviceManager class"""
 
-    def __init__(self, config):
+    def __init__(self, midi_config):
+        self.midi_config = midi_config
+        self._reset()
+        self.run()
+
+    def _reset(self):
         self.input_lookup = {}
         self.input_multi = None
         self.output_ports = []
-        self._create_devices(config)
-        self.run()
+        self._create_devices()
 
-    def _create_devices(self, config):
+    def _create_devices(self):
         input_devices = []
         input_ports = []
-        for my_input in config.get_inputs():
-            device = InputDevice(my_input, config.get_device_info(my_input))
+        for my_input in self.midi_config.get_inputs():
+            device = InputDevice(
+                my_input, self.midi_config.get_device_info(my_input))
             input_devices.append(device)
             self.input_lookup[device.channel] = device
             if device.port is not None:
                 input_ports.append(device.port)
-        for my_output in config.get_outputs():
-            device = OutputDevice(my_output, config.get_device_info(my_output))
+        for my_output in self.midi_config.get_outputs():
+            device = OutputDevice(
+                my_output, self.midi_config.get_device_info(my_output))
             self.output_ports.append(device.port)
         self.input_multi = MultiPort(input_ports)
 
@@ -196,6 +205,14 @@ class DeviceManager(object):
         }
         return switcher.get(mtype, None)()
 
+    def _special_commands(self, cmd):
+
+        print(100 * '>')
+
+        if cmd == 'RELOAD':
+            self.midi_config.process()
+            self._reset()
+
     def _process_message(self, msg):
         translate = None
         translated_msg = None
@@ -214,7 +231,10 @@ class DeviceManager(object):
             translate, channel, nrpn = my_input.translate(control, level)
 
             if translate is not None:
-                if nrpn is True:
+                if translate in SPECIAL_COMMANDS:
+                    if msg.type == 'note_off':
+                        self._special_commands(translate)
+                elif nrpn is True:
                     self._send_nrpn(channel, translate, level)
                 else:
                     translated_msg = self._compose_message(
@@ -253,14 +273,15 @@ class MidiConfig(object):
 
     def __init__(self, file):
         self._get_connected_devices()
-        self._process(file)
+        self.file = file
+        self.process()
 
     def _get_connected_devices(self):
         self.midi_input_names = mido.get_input_names()
         self.midi_output_names = mido.get_output_names()
 
-    def _process(self, file):
-        with open(file) as handle:
+    def process(self):
+        with open(self.file) as handle:
             data = json.loads(handle.read())
         self.inputs = data['inputs']
         self.outputs = data['outputs']
@@ -287,13 +308,24 @@ class MidiConfig(object):
         return info
 
 
-if __name__ == "__main__":
-    os.system('clear')
+def main():
+    """"""
+
+    def signal_handler(signal, frame):
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
     try:
-        config = MidiConfig(CONFIG_FILE)
+        midi_config = MidiConfig(CONFIG_FILE)
     except OSError:
         print('JSON file "{}" missing'.format(CONFIG_FILE))
     except Exception as e:
         print(e)
     else:
-        DeviceManager(config)
+        DeviceManager(midi_config)
+
+
+if __name__ == "__main__":
+    os.system('clear')
+    main()

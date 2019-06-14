@@ -7,7 +7,13 @@
     "X-TOUCH MINI": {
       "channel": 11,
       "controls": {
-        "": "<================ LAYER A ================>",
+        "<================ ENCODER BUTTONS ================>": null,
+        "31": {
+          "translate": "RELOAD",
+          "channel": 0,
+          "description": "RELOAD"
+        },
+        "<================ LAYER A ================>": null,
         "1": {
           "translate": 12,
           "channel": 16,
@@ -48,13 +54,13 @@
           "channel": 16,
           "description": "slew rate"
         },
-        "": "<================ BUTTON A1 ================>",
+        "<================ BUTTON A1 ================>": null,
         "32": {
           "translate": 32,
           "channel": 11,
           "description": "Bank B1"
         },
-        "": "<================ FADER ================>",
+        "<================ FADER ================>": null,
         "9": {
           "translate": 74,
           "channel": 16,
@@ -70,7 +76,7 @@
           "channel": 16,
           "description": "Master Filter"
         },
-        "": "<================ LAYER B ================>",
+        "<================ LAYER B ================>": null,
         "11": {
           "translate": 51,
           "channel": 2,
