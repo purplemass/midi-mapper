@@ -12,10 +12,11 @@ class MidiMessage(object):
         """Get message control and level.
         These are different for notes and CC messages"""
         if msg.type == 'pitchwheel':
-            return msg.pitch, msg.pitch
+            return msg.pitch, msg.pitch, 'PW'
         control = msg.control if hasattr(msg, 'control') else msg.note
         level = msg.value if hasattr(msg, 'value') else msg.velocity
-        return control, level
+        mtype = 'CC' if msg.type == 'control_change' else 'NT'
+        return control, level, mtype
 
     def compose(self, channel, translate, level, mtype):
 

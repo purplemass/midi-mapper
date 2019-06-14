@@ -17,8 +17,8 @@ logger = Logger()
 class DeviceManager(object):
     """DeviceManager class"""
 
-    def __init__(self, midi_config):
-        self.midi_config = midi_config
+    def __init__(self, config):
+        self.config = config
         self.message = MidiMessage()
         self.output = MidiOutput()
         self._reset()
@@ -34,16 +34,16 @@ class DeviceManager(object):
         input_devices = []
         input_ports = []
         output_ports = []
-        for my_input in self.midi_config.get_inputs():
+        for my_input in self.config.get_inputs():
             device = InputDevice(
-                my_input, self.midi_config.get_device_info(my_input))
+                my_input, self.config.get_device_info(my_input))
             input_devices.append(device)
             self.input_lookup[device.channel] = device
             if device.port is not None:
                 input_ports.append(device.port)
-        for my_output in self.midi_config.get_outputs():
+        for my_output in self.config.get_outputs():
             device = OutputDevice(
-                my_output, self.midi_config.get_device_info(my_output))
+                my_output, self.config.get_device_info(my_output))
             output_ports.append(device.port)
         self.input_multi = MultiPort(input_ports)
         return output_ports
@@ -54,19 +54,15 @@ class DeviceManager(object):
         logger.log(dline=True)
 
         if cmd == 'RELOAD':
-            self.midi_config.process()
+            self.config.process()
             self._reset()
 
     def _process_message(self, msg):
         translate = None
         translated_msg = None
-        control, level = self.message.get_details(msg)
+        control, level, mtype = self.message.get_details(msg)
         logger.add('CH:{:>2} Control:{:>3} [{:>3} {}]'.format(
-            msg.channel + 1,
-            control,
-            level,
-            'CC' if msg.type == 'control_change' else 'NT',
-        ))
+            msg.channel + 1, control, level, mtype))
         logger.add('==>')
         nrpn = False
 
