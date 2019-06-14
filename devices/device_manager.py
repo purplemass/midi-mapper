@@ -4,8 +4,8 @@ import time
 import mido
 from mido.ports import MultiPort
 
-from devices import InputDevice, OutputDevice
-from logger import Logger
+from .devices import InputDevice, OutputDevice
+from utils.logger import Logger
 
 SPECIAL_COMMANDS = ['RELOAD']
 

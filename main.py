@@ -38,8 +38,8 @@ import os
 import signal
 import sys
 
-from device_manager import DeviceManager
-from logger import Logger
+from devices.device_manager import DeviceManager
+from utils.logger import Logger
 from midi_config import MidiConfig
 
 CONFIG_FILE = './mappings/all.json'
