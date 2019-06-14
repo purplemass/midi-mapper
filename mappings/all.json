@@ -120,22 +120,37 @@
       }
     },
     "Faderfox UC4": {
-      "channel": 4,
+      "channel": 3,
       "controls": {
-        "15": {
-          "translate": 2,
-          "channel": 11,
+        "32": {
+          "translate": 12,
+          "channel": 16,
           "description": "Synth1 Volume"
         },
-        "14": {
-          "translate": 51,
-          "channel": 2,
-          "description": "Synth1 Volume"
-        },
-        "15-": {
+        "33": {
           "translate": 14,
           "channel": 16,
-          "description": "Synth2 Volume"
+          "description": "Synth1 Volume"
+        },
+        "34": {
+          "translate": 12,
+          "channel": 10,
+          "description": "drum 1 level"
+        },
+        "35": {
+          "translate": 23,
+          "channel": 10,
+          "description": "drum 2 level"
+        },
+        "36": {
+          "translate": 45,
+          "channel": 10,
+          "description": "drum 3 level"
+        },
+        "37": {
+          "translate": 53,
+          "channel": 10,
+          "description": "drum 4 level"
         }
       }
     },
