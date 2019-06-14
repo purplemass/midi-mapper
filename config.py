@@ -5,8 +5,8 @@ import json
 import mido
 
 
-class MidiConfig(object):
-    """MidiConfig class"""
+class Config(object):
+    """Config class"""
 
     def __init__(self, file):
         self.file = file

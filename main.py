@@ -40,7 +40,7 @@ import sys
 
 from devices.device_manager import DeviceManager
 from utils.logger import Logger
-from midi_config import MidiConfig
+from config import Config
 
 CONFIG_FILE = './mappings/all.json'
 
@@ -56,7 +56,7 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     try:
-        midi_config = MidiConfig(CONFIG_FILE)
+        midi_config = Config(CONFIG_FILE)
     except OSError:
         logger.log('JSON file "{}" missing'.format(CONFIG_FILE))
     except Exception as e:
