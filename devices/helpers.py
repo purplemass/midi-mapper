@@ -55,14 +55,22 @@ class MidiMessage(object):
 class MidiOutput(object):
     """"""
 
-    def set_outputs(self, output_ports):
+    def set_outputs(self, output_ports, clock_ports):
+        """Set output ports."""
         self.output_ports = output_ports
+        self.clock_ports = clock_ports
 
     def send_midi(self, msg):
         """Send MIDI message to all outputs."""
-        for outport in self.output_ports:
-            if outport is not None:
-                outport.send(msg)
+        for port in self.output_ports:
+            if port is not None:
+                port.send(msg)
+
+    def send_clock(self, msg):
+        """Send CLOCK to all outputs."""
+        for port in self.clock_ports:
+            if port is not None:
+                port.send(msg)
 
     def send_nrpn(self, channel, control, level):
         """Send NRPN message of the format below to all ports:

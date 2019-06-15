@@ -1,4 +1,6 @@
 """"""
+
+import threading
 import time
 
 import mido
@@ -22,18 +24,30 @@ class DeviceManager(object):
         self.message = MidiMessage()
         self.output = MidiOutput()
         self._reset()
-        self.run()
+        self._run()
 
     def _reset(self):
         self.input_lookup = {}
         self.input_multi = None
-        output_ports = self._create_devices()
-        self.output.set_outputs(output_ports)
+        self._create_devices()
+
+    def _run(self):
+
+        def get_midi():
+            while True:
+                for msg in self.input_multi.iter_pending():
+                    self._process_message(msg)
+
+        logger.log(line=True)
+        threading.Thread(target=get_midi).start()
+        while True:
+            time.sleep(1)
 
     def _create_devices(self):
         input_devices = []
         input_ports = []
         output_ports = []
+        clock_ports = []
         for my_input in self.config.get_inputs():
             device = InputDevice(
                 my_input, self.config.get_device_info(my_input))
@@ -45,8 +59,12 @@ class DeviceManager(object):
             device = OutputDevice(
                 my_output, self.config.get_device_info(my_output))
             output_ports.append(device.port)
+            # clock ports
+            if device.port is not None and 'Deluge' in device.port.name:
+                clock_ports.append(device.port)
+
         self.input_multi = MultiPort(input_ports)
-        return output_ports
+        self.output.set_outputs(output_ports, clock_ports)
 
     def _special_commands(self, cmd):
 
@@ -58,6 +76,15 @@ class DeviceManager(object):
             self._reset()
 
     def _process_message(self, msg):
+        if msg.type == 'clock':
+            self.output.send_clock(msg)
+            return
+        if msg.type == 'program_change':
+            return
+        if msg.type == 'start' or msg.type == 'stop':
+            self.output.send_midi(msg)
+            return
+
         translate = None
         translated_msg = None
         control, level, mtype = self.message.get_details(msg)
@@ -99,10 +126,3 @@ class DeviceManager(object):
             self.output.send_midi(ret_msg)
 
         logger.log()
-
-    def run(self):
-        logger.log(line=True)
-        while True:
-            time.sleep(0.1)
-            for msg in self.input_multi.iter_pending():
-                self._process_message(msg)

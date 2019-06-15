@@ -1,9 +1,30 @@
 {
   "outputs": {
     "Circuit": {},
-    "X-TOUCH MINI": {}
+    "Deluge OUT": {},
+    "XX-TOUCH MINI": {}
   },
   "inputs": {
+    "Circuit": {
+      "channel": 11,
+      "controls": {
+        "31": {
+          "translate": "RELOAD",
+          "channel": 0,
+          "description": "RELOAD"
+        }
+      }
+    },
+    "Deluge": {
+      "channel": 11,
+      "controls": {
+        "31": {
+          "translate": "RELOAD",
+          "channel": 0,
+          "description": "RELOAD"
+        }
+      }
+    },
     "X-TOUCH MINI": {
       "channel": 11,
       "controls": {
