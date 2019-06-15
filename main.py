@@ -50,7 +50,11 @@ logger = Logger()
 def main():
     """"""
 
+    manager = DeviceManager()
+
     def signal_handler(signal, frame):
+        if manager is not None:
+            manager.stop()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -62,7 +66,7 @@ def main():
     except Exception as e:
         logger.log(e)
     else:
-        DeviceManager(midi_config)
+        manager.start(midi_config)
 
 
 if __name__ == "__main__":

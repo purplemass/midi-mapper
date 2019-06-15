@@ -1,17 +1,17 @@
-""""""
-
+"""
+Device manager.
+"""
 import threading
 import time
 
 import mido
-from mido.ports import MultiPort
 
 from utils.logger import Logger
 
-from .devices import InputDevice, OutputDevice
-from .helpers import MidiMessage, MidiOutput
+from .helpers import MidiMessage, MidiInput, MidiOutput, MidiClock
 
 SPECIAL_COMMANDS = ['RELOAD']
+IGNORE_MESSAGE_TYPES = ['clock', 'program_change', 'start', 'stop']
 
 logger = Logger()
 
@@ -19,52 +19,41 @@ logger = Logger()
 class DeviceManager(object):
     """DeviceManager class"""
 
-    def __init__(self, config):
+    def __init__(self):
+        self.keep_running = True
+
+    def start(self, config):
         self.config = config
         self.message = MidiMessage()
+        self.input = MidiInput(config)
         self.output = MidiOutput()
+        self.clock = MidiClock(config)
         self._reset()
         self._run()
 
+    def stop(self):
+        self.clock.stop()
+        self.keep_running = False
+
     def _reset(self):
-        self.input_lookup = {}
-        self.input_multi = None
-        self._create_devices()
+        ports = self.input.create_ports()
+        self.input_lookup = ports['input_lookup']
+        self.input_multi = ports['input_multi']
+        self.output.set_outputs(ports['output_ports'])
+        self.clock.set_outputs(ports['clock_out_ports'])
+        self.clock.start()
+
+    def _get_midi(self):
+        while self.keep_running:
+            for msg in self.input_multi.iter_pending():
+                self._process_message(msg)
+            time.sleep(0.1)
 
     def _run(self):
-
-        def get_midi():
-            while True:
-                for msg in self.input_multi.iter_pending():
-                    self._process_message(msg)
-
         logger.log(line=True)
-        threading.Thread(target=get_midi).start()
-        while True:
+        threading.Thread(target=self._get_midi, daemon=True).start()
+        while self.keep_running:
             time.sleep(1)
-
-    def _create_devices(self):
-        input_devices = []
-        input_ports = []
-        output_ports = []
-        clock_ports = []
-        for my_input in self.config.get_inputs():
-            device = InputDevice(
-                my_input, self.config.get_device_info(my_input))
-            input_devices.append(device)
-            self.input_lookup[device.channel] = device
-            if device.port is not None:
-                input_ports.append(device.port)
-        for my_output in self.config.get_outputs():
-            device = OutputDevice(
-                my_output, self.config.get_device_info(my_output))
-            output_ports.append(device.port)
-            # clock ports
-            if device.port is not None and 'Deluge' in device.port.name:
-                clock_ports.append(device.port)
-
-        self.input_multi = MultiPort(input_ports)
-        self.output.set_outputs(output_ports, clock_ports)
 
     def _special_commands(self, cmd):
 
@@ -76,13 +65,7 @@ class DeviceManager(object):
             self._reset()
 
     def _process_message(self, msg):
-        if msg.type == 'clock':
-            self.output.send_clock(msg)
-            return
-        if msg.type == 'program_change':
-            return
-        if msg.type == 'start' or msg.type == 'stop':
-            self.output.send_midi(msg)
+        if msg.type in IGNORE_MESSAGE_TYPES:
             return
 
         translate = None

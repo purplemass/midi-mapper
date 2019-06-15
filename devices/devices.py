@@ -23,7 +23,7 @@ class Device(object):
             logger.log(
                 '"{}" connected as "{}"'.format(self.name, self.midi_name))
         except OSError:
-            logger.log('Error: Could not connect to "{}"'.format(self.name))
+            logger.log('ERROR: Could not connect to "{}"'.format(self.name))
 
 
 class InputDevice(Device):

@@ -1,30 +1,16 @@
 {
+  "clock": {
+    "input": "Circuit",
+    "outputs": [
+        "Deluge OUT"
+    ]
+  },
   "outputs": {
     "Circuit": {},
-    "Deluge OUT": {},
-    "XX-TOUCH MINI": {}
+    "X-TOUCH MINI": {},
+    "Deluge OUT": {}
   },
   "inputs": {
-    "Circuit": {
-      "channel": 11,
-      "controls": {
-        "31": {
-          "translate": "RELOAD",
-          "channel": 0,
-          "description": "RELOAD"
-        }
-      }
-    },
-    "Deluge": {
-      "channel": 11,
-      "controls": {
-        "31": {
-          "translate": "RELOAD",
-          "channel": 0,
-          "description": "RELOAD"
-        }
-      }
-    },
     "X-TOUCH MINI": {
       "channel": 11,
       "controls": {

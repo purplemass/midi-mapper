@@ -1,8 +1,23 @@
 """
 Helpers for devices.
 """
+import threading
+import time
 
-import mido
+from mido import Message, open_input
+from mido.ports import MultiPort
+
+from .devices import InputDevice, OutputDevice
+
+
+CLOCK_START_DELAY = 0.005
+
+
+def send_midi(msg, outputs):
+    """Send MIDI to output ports."""
+    for port in outputs:
+        if port is not None:
+            port.send(msg)
 
 
 class MidiMessage(object):
@@ -21,7 +36,7 @@ class MidiMessage(object):
     def compose(self, channel, translate, level, mtype):
 
         def note():
-            return mido.Message(
+            return Message(
                 channel=channel,
                 note=int(translate),
                 velocity=level,
@@ -29,7 +44,7 @@ class MidiMessage(object):
             )
 
         def control_change():
-            return mido.Message(
+            return Message(
                 channel=channel,
                 control=int(translate),
                 value=level,
@@ -37,7 +52,7 @@ class MidiMessage(object):
             )
 
         def program_change():
-            return mido.Message(
+            return Message(
                 channel=channel,
                 program=int(translate),
                 type='program_change',
@@ -52,25 +67,53 @@ class MidiMessage(object):
         return switcher.get(mtype, None)()
 
 
+class MidiInput(object):
+    """"""
+
+    def __init__(self, config):
+        self.config = config
+
+    def create_ports(self):
+        input_lookup = {}
+        input_devices = []
+        input_ports = []
+        output_ports = []
+        clock_out_ports = []
+        # inputs
+        for my_input in self.config.get_inputs():
+            device = InputDevice(
+                my_input, self.config.get_device_info(my_input))
+            input_devices.append(device)
+            input_lookup[device.channel] = device
+            if device.port is not None:
+                input_ports.append(device.port)
+        # outputs
+        for my_output in self.config.get_outputs():
+            device = OutputDevice(
+                my_output, self.config.get_device_info(my_output))
+            output_ports.append(device.port)
+            # clock out ports
+            if device.name in self.config.get_clock_outputs():
+                clock_out_ports.append(device.port)
+
+        return {
+            'input_lookup': input_lookup,
+            'input_multi': MultiPort(input_ports),
+            'output_ports': output_ports,
+            'clock_out_ports': clock_out_ports,
+        }
+
+
 class MidiOutput(object):
     """"""
 
-    def set_outputs(self, output_ports, clock_ports):
+    def set_outputs(self, outputs):
         """Set output ports."""
-        self.output_ports = output_ports
-        self.clock_ports = clock_ports
+        self.outputs = outputs
 
     def send_midi(self, msg):
         """Send MIDI message to all outputs."""
-        for port in self.output_ports:
-            if port is not None:
-                port.send(msg)
-
-    def send_clock(self, msg):
-        """Send CLOCK to all outputs."""
-        for port in self.clock_ports:
-            if port is not None:
-                port.send(msg)
+        send_midi(msg, self.outputs)
 
     def send_nrpn(self, channel, control, level):
         """Send NRPN message of the format below to all ports:
@@ -86,15 +129,50 @@ class MidiOutput(object):
         if len(control) != 2:
             return
         cc = 'control_change'
-        msg = mido.Message(
+        msg = Message(
             channel=channel, control=99, value=int(control[0]), type=cc)
         self.send_midi(msg)
-        msg = mido.Message(
+        msg = Message(
             channel=channel, control=98, value=int(control[1]), type=cc)
         self.send_midi(msg)
-        msg = mido.Message(
+        msg = Message(
             channel=channel, control=6, value=level, type=cc)
         self.send_midi(msg)
-        msg = mido.Message(
+        msg = Message(
             channel=channel, control=38, value=0, type=cc)
         self.send_midi(msg)
+
+
+class MidiClock(object):
+    """Handle clock input/outputs."""
+
+    def __init__(self, config):
+        self.keep_running = True
+        self.input = None
+        clock_input = config.get_clock_input()
+        if clock_input is not None:
+            self.input = open_input(clock_input)
+
+    def set_outputs(self, outputs):
+        """Set output ports."""
+        self.outputs = outputs
+        send_midi(Message(type='stop'), self.outputs)
+
+    def _get_midi(self):
+        while self.keep_running:
+            for msg in self.input:
+                if (msg.type == 'clock' or
+                        msg.type == 'start' or
+                        msg.type == 'stop'):
+                    # slight delay at start
+                    if msg.type == 'start':
+                        time.sleep(CLOCK_START_DELAY)
+                    send_midi(msg, self.outputs)
+
+    def start(self):
+        if self.input is not None:
+            threading.Thread(target=self._get_midi, daemon=True).start()
+
+    def stop(self):
+        send_midi(Message(type='stop'), self.outputs)
+        self.keep_running = False
