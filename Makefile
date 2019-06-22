@@ -1,7 +1,10 @@
 SHELL := /bin/bash
 
 run:
-	python3 main.py
+	clear; python3 main.py
+
+test:
+	clear; pytest
 
 put:
 	scp main.py config.py pi@192.168.1.17:/home/pi/

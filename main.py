@@ -62,7 +62,7 @@ def main():
     try:
         midi_config = Config(CONFIG_FILE)
     except OSError:
-        logger.log('JSON file "{}" missing'.format(CONFIG_FILE))
+        logger.log(f'JSON file "{CONFIG_FILE}" missing')
     except Exception as e:
         logger.log(e)
     else:
