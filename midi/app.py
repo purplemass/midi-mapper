@@ -9,6 +9,12 @@ from mido.ports import MultiPort
 from rx.subjects import Subject
 from rx import operators as ops
 
+from utils import csv_dict_list
+
+
+TRANSLATIONS_FILE = './mappings/mappings.csv'
+translations = csv_dict_list(TRANSLATIONS_FILE)
+
 
 def io_ports(midi_stream):
     """Create input/output ports and add incoming messages to the stream."""
@@ -30,12 +36,63 @@ def io_ports(midi_stream):
 
 def process_message(msg):
     """Process incoming message."""
-    return msg
+
+    if msg.type == 'control_change':
+        mtype = 'CC'
+        value = msg.value
+        control = msg.control
+    elif msg.type == 'note_off':
+        mtype = 'OFF'
+        value = msg.velocity
+        control = msg.note
+    elif msg.type == 'note_on':
+        mtype = 'ON'
+        value = msg.velocity
+        control = msg.note
+
+    return {
+        'type': mtype,
+        'channel': msg.channel + 1,
+        'control': control,
+        'value': value,
+        'msg': msg,
+    }
 
 
-def print_message(msg):
+def check_message(msg):
+    """Check incoming message."""
+
+    def check(t):
+        return (
+            t['type'] == msg['type'] and
+            int(t['channel']) == msg['channel'] and
+            int(t['control']) == msg['control']
+        )
+
+    return [(t, msg) for t in translations if check(t)]
+
+
+def translate_message_list(msg_list):
+    """Translate incoming message list."""
+
+    return msg_list
+
+
+def print_message(msg_list):
     """Print message."""
-    print(msg)
+
+    if len(msg_list) == 0:
+        return
+
+    msg = msg_list[0]
+    print('[{}] {}__{} => {}__{:<25}{}'.format(
+        msg[0]['bank'],
+        msg[0]['input-device'],
+        msg[0]['description'],
+        msg[0]['output-device'],
+        msg[0]['o-description'],
+        msg[1]['value'],
+    ))
 
 
 def main():
@@ -52,6 +109,8 @@ def main():
     midi_stream = Subject()
     midi_stream.pipe(
         ops.map(lambda x: process_message(x)),
+        ops.map(lambda x: check_message(x)),
+        ops.map(lambda x: translate_message_list(x)),
     ).subscribe(print_message)
 
     io_ports(midi_stream)

@@ -1,0 +1,9 @@
+input-device,description,type,bank,channel,control,=>,output-device,description,channel,control
+XTouch Mini,Wheel1,CC,1,11,1,=>,Circuit,synth1 volume,16,12
+XTouch Mini,Wheel2,CC,1,11,2,=>,Circuit,synth2 volume,16,14
+XTouch Mini,Wheel3,CC,1,11,3,=>,Circuit,synth1 send level,16,111
+XTouch Mini,Wheel4,CC,1,11,4,=>,Circuit,synth2 send level,16,112
+XTouch Mini,Wheel5,CC,1,11,5,=>,Circuit,delay feedback,16,1:8
+XTouch Mini,Wheel6,CC,1,11,6,=>,Circuit,delay width,16,1:9
+XTouch Mini,Wheel7,CC,1,11,7,=>,Circuit,left-right ratio,16,1:10
+XTouch Mini,Wheel8,CC,1,11,8,=>,Circuit,slew rate,16,1:11
