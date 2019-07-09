@@ -5,7 +5,9 @@ import sys
 import time
 
 import mido
+from mido import Message
 from mido.ports import MultiPort
+
 from rx.subjects import Subject
 from rx import operators as ops
 
@@ -20,7 +22,12 @@ def io_ports(midi_stream):
     """Create input/output ports and add incoming messages to the stream."""
 
     def input_message(msg):
-        midi_stream.on_next(msg)
+        if (
+            msg.type != 'clock' and
+            msg.type != 'start' and
+            msg.type != 'stop'
+        ):
+            midi_stream.on_next(msg)
 
     input_names = mido.get_input_names()
     output_names = mido.get_output_names()
@@ -34,7 +41,7 @@ def io_ports(midi_stream):
     return inports, outports
 
 
-def process_message(msg):
+def process(msg):
     """Process incoming message."""
 
     if msg.type == 'control_change':
@@ -55,69 +62,78 @@ def process_message(msg):
         'channel': msg.channel + 1,
         'control': control,
         'value': value,
-        'msg': msg,
+        'midi': msg,
     }
 
 
-def check_message(msg):
+def check(msg):
     """Check incoming message."""
 
-    def check(t):
+    def check(translation):
         return (
-            t['type'] == msg['type'] and
-            int(t['channel']) == msg['channel'] and
-            int(t['control']) == msg['control']
+            translation['type'] == msg['type'] and
+            int(translation['channel']) == msg['channel'] and
+            int(translation['control']) == msg['control']
         )
 
-    return [(t, msg) for t in translations if check(t)]
+    return [{
+        'translate': t,
+        'current': msg
+    } for t in translations if check(t)]
 
 
-def translate_message_list(msg_list):
-    """Translate incoming message list."""
+def translate(msg):
+    """Translate message."""
 
-    return msg_list
+    channel = int(msg['translate']['o-channel']) - 1
+    translated = Message(
+        type=getattr(msg['current']['midi'], 'type'),
+        channel=channel,
+        control=int(msg['translate']['o-control']),
+        value=msg['current']['value'],
+    )
+    return translated
 
 
-def print_message(msg_list):
-    """Print message."""
+def log(msg):
+    """Log message to console."""
 
-    if len(msg_list) == 0:
-        return
-
-    msg = msg_list[0]
-    print('[{}] {}__{} => {}__{:<25}{}'.format(
-        msg[0]['bank'],
-        msg[0]['input-device'],
-        msg[0]['description'],
-        msg[0]['output-device'],
-        msg[0]['o-description'],
-        msg[1]['value'],
+    print('[{}] {}__{} => {}__{:<25} {}'.format(
+        msg['translate']['bank'],
+        msg['translate']['input-device'],
+        msg['translate']['description'],
+        msg['translate']['output-device'],
+        msg['translate']['o-description'],
+        msg['current']['value'],
     ))
 
 
 def main():
     """Main loop of the application."""
 
-    def signal_handler(signal, frame):
-        # print('\n' * 100)
-        print('\033[H\033[J')
-        print('Keyboard interupt detected')
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
-
     midi_stream = Subject()
+    _, outports = io_ports(midi_stream)
     midi_stream.pipe(
-        ops.map(lambda x: process_message(x)),
-        ops.map(lambda x: check_message(x)),
-        ops.map(lambda x: translate_message_list(x)),
-    ).subscribe(print_message)
-
-    io_ports(midi_stream)
+        ops.map(lambda x: process(x)),
+        ops.map(lambda x: check(x)),
+        ops.filter(lambda x: len(x) > 0),
+        ops.map(lambda x: x[0]),
+        ops.do_action(lambda x: log(x)),
+        ops.map(lambda x: translate(x)),
+        ops.do_action(lambda x: outports.send(x)),
+    ).subscribe()
 
     while True:
         time.sleep(1)
 
 
 if __name__ == "__main__":
+    """Add keyboard interupt handler and run main."""
+
+    def signal_handler(signal, frame):
+        print('\033[H\033[J')
+        print('Keyboard interupt detected')
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
     main()
