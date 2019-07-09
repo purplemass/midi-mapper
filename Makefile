@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 run:
-	clear; python3 main.py
+	clear; python3 midi/app.py
 
 test:
 	clear; pytest
