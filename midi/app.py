@@ -29,7 +29,7 @@ def main():
         ops.filter(lambda x: len(x) > 0),
         ops.map(lambda x: x[0]),
         ops.do_action(lambda x: log(x)),
-        ops.map(lambda x: change_bank(x)),
+        ops.map(lambda x: change_bank(x, outports)),
         ops.filter(lambda x: x is not None),
         ops.map(lambda x: translate(x)),
         ops.do_action(lambda x: send(x, outports)),

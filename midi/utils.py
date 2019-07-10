@@ -9,7 +9,7 @@ from mido import Message
 
 
 TRANSLATIONS_FILE = './mappings/mappings.csv'
-BANK = 1
+active_bank = 1
 
 
 def csv_dict_list(filename):
@@ -94,7 +94,8 @@ def check(msg):
             translation['type'] == msg['type'] and
             int(translation['channel']) == msg['channel'] and
             int(translation['control']) == msg['control'] and
-            (int(translation['bank']) == 0 or int(translation['bank']) == BANK)
+            (int(translation['bank']) == 0 or
+                int(translation['bank']) == active_bank)
         )
 
     translations = csv_dict_list(TRANSLATIONS_FILE)
@@ -105,15 +106,18 @@ def check(msg):
     } for t in translations if check(t)]
 
 
-def change_bank(msg):
+def change_bank(msg, outports):
     """Check incoming bank change messages."""
-    global BANK
+
+    global active_bank
 
     if (
         int(msg['translate']['bank']) == 0 and
         msg['translate']['output-device'].lower() == 'bank'
     ):
-        BANK = int(msg['translate']['o-channel'])
+        active_bank = int(msg['translate']['o-channel'])
+        midi = msg['current']['midi']
+        reset_banks(midi, outports)
         msg = None
     return msg
 
@@ -197,3 +201,23 @@ def send_nrpn(msg, control, outports):
         'level': 0,
         'type': msg['type']
     }, outports)
+
+
+def reset_banks(midi, outports):
+    """Turn all bank buttons off and turn on the active bank."""
+
+    translations = csv_dict_list(TRANSLATIONS_FILE)
+    banks = [
+        t['control'] for t in translations if t['output-device'] == 'Bank']
+    for bank in banks:
+        outports.send(Message(
+            type='note_off',
+            channel=midi.channel,
+            note=int(bank),
+        ))
+
+    outports.send(Message(
+        type='note_on',
+        channel=midi.channel,
+        note=midi.note,
+    ))
