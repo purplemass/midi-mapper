@@ -8,6 +8,7 @@ from mido import Message
 
 
 TRANSLATIONS_FILE = './mappings/mappings.csv'
+BANK = 2
 
 
 def csv_dict_list(filename):
@@ -39,6 +40,7 @@ def io_ports(midi_stream):
             msg.type != 'start' and
             msg.type != 'stop'
         ):
+            # print(msg)
             midi_stream.on_next(msg)
 
     input_names = mido.get_input_names()
@@ -60,7 +62,8 @@ def check(msg):
         return (
             translation['type'] == msg['type'] and
             int(translation['channel']) == msg['channel'] and
-            int(translation['control']) == msg['control']
+            int(translation['control']) == msg['control'] and
+            int(translation['bank']) == BANK
         )
 
     translations = csv_dict_list(TRANSLATIONS_FILE)
@@ -76,16 +79,20 @@ def process(midi):
 
     if midi.type == 'control_change':
         mtype = 'CC'
-        level = midi.value
         control = midi.control
+        level = midi.value
     elif midi.type == 'note_off':
         mtype = 'OFF'
-        level = midi.velocity
         control = midi.note
+        level = midi.velocity
     elif midi.type == 'note_on':
         mtype = 'ON'
-        level = midi.velocity
         control = midi.note
+        level = midi.velocity
+    elif midi.type == 'program_change':
+        mtype = 'PG'
+        control = midi.program
+        level = 0
 
     return {
         'type': mtype,
