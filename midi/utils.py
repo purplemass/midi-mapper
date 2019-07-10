@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import csv
+import sys
 
 import mido
 from mido.ports import MultiPort
@@ -40,7 +41,8 @@ def io_ports(midi_stream):
             msg.type != 'start' and
             msg.type != 'stop'
         ):
-            # print(msg)
+            if '-v' in sys.argv:
+                print(f'\t\t\t\t\t\t\t\t -----> {msg}')
             midi_stream.on_next(msg)
 
     input_names = mido.get_input_names()

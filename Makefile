@@ -3,6 +3,9 @@ SHELL := /bin/bash
 run:
 	clear; python3 midi/app.py
 
+debug:
+	clear; python3 midi/app.py -v
+
 test:
 	clear; pytest
 
