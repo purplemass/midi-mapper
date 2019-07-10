@@ -8,7 +8,6 @@ from mido.ports import MultiPort
 from mido import Message
 
 
-TRANSLATIONS_FILE = './mappings/mappings.csv'
 active_bank = 1
 
 
@@ -57,7 +56,7 @@ def io_ports(midi_stream):
     return inports, outports
 
 
-def process(midi):
+def process(midi, translations, outports):
     """Process incoming message."""
 
     if midi.type == 'control_change':
@@ -83,6 +82,8 @@ def process(midi):
         'control': control,
         'level': level,
         'midi': midi,
+        'translations': translations,
+        'outports': outports,
     }
 
 
@@ -98,15 +99,13 @@ def check(msg):
                 int(translation['bank']) == active_bank)
         )
 
-    translations = csv_dict_list(TRANSLATIONS_FILE)
-
     return [{
-        'translate': t,
+        'translate': translate,
         'current': msg
-    } for t in translations if check(t)]
+    } for translate in msg['translations'] if check(translate)]
 
 
-def change_bank(msg, outports):
+def change_bank(msg):
     """Check incoming bank change messages."""
 
     global active_bank
@@ -116,8 +115,7 @@ def change_bank(msg, outports):
         msg['translate']['output-device'].lower() == 'bank'
     ):
         active_bank = int(msg['translate']['o-channel'])
-        midi = msg['current']['midi']
-        reset_banks(midi, outports)
+        reset_banks(msg)
         msg = None
     return msg
 
@@ -130,17 +128,19 @@ def translate(msg):
         'channel': int(msg['translate']['o-channel']) - 1,
         'control': msg['translate']['o-control'],
         'level': msg['current']['level'],
+        'translations': msg['current']['translations'],
+        'outports': msg['current']['outports'],
     }
 
 
-def send(msg, outports):
+def send(msg):
     """Send MIDI or NRPN message to output ports."""
 
     control = msg['control'].split(':')
     if len(control) == 2:
-        send_nrpn(msg, control, outports)
+        send_nrpn(msg, control, msg['outports'])
     else:
-        send_midi(msg, outports)
+        send_midi(msg, msg['outports'])
 
 
 def log(msg):
@@ -203,20 +203,20 @@ def send_nrpn(msg, control, outports):
     }, outports)
 
 
-def reset_banks(midi, outports):
+def reset_banks(msg):
     """Turn all bank buttons off and turn on the active bank."""
 
-    translations = csv_dict_list(TRANSLATIONS_FILE)
-    banks = [
-        t['control'] for t in translations if t['output-device'] == 'Bank']
+    midi = msg['current']['midi']
+    banks = [t['control'] for t in msg['current'][
+        'translations'] if t['output-device'] == 'Bank']
     for bank in banks:
-        outports.send(Message(
+        msg['current']['outports'].send(Message(
             type='note_off',
             channel=midi.channel,
             note=int(bank),
         ))
 
-    outports.send(Message(
+    msg['current']['outports'].send(Message(
         type='note_on',
         channel=midi.channel,
         note=midi.note,
