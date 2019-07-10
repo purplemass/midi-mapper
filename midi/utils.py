@@ -57,25 +57,6 @@ def io_ports(midi_stream):
     return inports, outports
 
 
-def check(msg):
-    """Check incoming message."""
-
-    def check(translation):
-        return (
-            translation['type'] == msg['type'] and
-            int(translation['channel']) == msg['channel'] and
-            int(translation['control']) == msg['control'] and
-            (int(translation['bank']) == 0 or int(translation['bank']) == BANK)
-        )
-
-    translations = csv_dict_list(TRANSLATIONS_FILE)
-
-    return [{
-        'translate': t,
-        'current': msg
-    } for t in translations if check(t)]
-
-
 def process(midi):
     """Process incoming message."""
 
@@ -103,6 +84,25 @@ def process(midi):
         'level': level,
         'midi': midi,
     }
+
+
+def check(msg):
+    """Check incoming message."""
+
+    def check(translation):
+        return (
+            translation['type'] == msg['type'] and
+            int(translation['channel']) == msg['channel'] and
+            int(translation['control']) == msg['control'] and
+            (int(translation['bank']) == 0 or int(translation['bank']) == BANK)
+        )
+
+    translations = csv_dict_list(TRANSLATIONS_FILE)
+
+    return [{
+        'translate': t,
+        'current': msg
+    } for t in translations if check(t)]
 
 
 def change_bank(msg):
@@ -137,6 +137,19 @@ def send(msg, outports):
         send_nrpn(msg, control, outports)
     else:
         send_midi(msg, outports)
+
+
+def log(msg):
+    """Log message to console."""
+
+    print('[{}] {}__{} => {}__{:<25} {}'.format(
+        msg['translate']['bank'],
+        msg['translate']['input-device'],
+        msg['translate']['description'],
+        msg['translate']['output-device'],
+        msg['translate']['o-description'],
+        msg['current']['level'],
+    ))
 
 
 def send_midi(msg, outports):
@@ -184,16 +197,3 @@ def send_nrpn(msg, control, outports):
         'level': 0,
         'type': msg['type']
     }, outports)
-
-
-def log(msg):
-    """Log message to console."""
-
-    print('[{}] {}__{} => {}__{:<25} {}'.format(
-        msg['translate']['bank'],
-        msg['translate']['input-device'],
-        msg['translate']['description'],
-        msg['translate']['output-device'],
-        msg['translate']['o-description'],
-        msg['current']['level'],
-    ))
