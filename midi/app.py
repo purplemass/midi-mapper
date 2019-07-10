@@ -10,6 +10,7 @@ from rx import operators as ops
 from utils import (
     io_ports,
     check,
+    change_bank,
     process,
     translate,
     send,
@@ -28,6 +29,8 @@ def main():
         ops.filter(lambda x: len(x) > 0),
         ops.map(lambda x: x[0]),
         ops.do_action(lambda x: log(x)),
+        ops.map(lambda x: change_bank(x)),
+        ops.filter(lambda x: x is not None),
         ops.map(lambda x: translate(x)),
         ops.do_action(lambda x: send(x, outports)),
     ).subscribe()

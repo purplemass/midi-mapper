@@ -9,7 +9,7 @@ from mido import Message
 
 
 TRANSLATIONS_FILE = './mappings/mappings.csv'
-BANK = 2
+BANK = 1
 
 
 def csv_dict_list(filename):
@@ -65,7 +65,7 @@ def check(msg):
             translation['type'] == msg['type'] and
             int(translation['channel']) == msg['channel'] and
             int(translation['control']) == msg['control'] and
-            int(translation['bank']) == BANK
+            (int(translation['bank']) == 0 or int(translation['bank']) == BANK)
         )
 
     translations = csv_dict_list(TRANSLATIONS_FILE)
@@ -103,6 +103,19 @@ def process(midi):
         'level': level,
         'midi': midi,
     }
+
+
+def change_bank(msg):
+    """Check incoming bank change messages."""
+    global BANK
+
+    if (
+        int(msg['translate']['bank']) == 0 and
+        msg['translate']['output-device'].lower() == 'bank'
+    ):
+        BANK = int(msg['translate']['o-channel'])
+        msg = None
+    return msg
 
 
 def translate(msg):
