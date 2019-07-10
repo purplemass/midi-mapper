@@ -40,9 +40,9 @@ def io_ports(midi_stream):
             msg.type != 'start' and
             msg.type != 'stop'
         ):
+            midi_stream.on_next(msg)
             if '-v' in sys.argv:
                 print(f'\t\t\t\t\t\t\t\t -----> {msg}')
-            midi_stream.on_next(msg)
 
     input_names = mido.get_input_names()
     output_names = mido.get_output_names()
@@ -101,35 +101,53 @@ def check(msg):
 
     return [{
         'translate': translate,
-        'current': msg
+        'msg': msg
     } for translate in msg['translations'] if check(translate)]
 
 
-def change_bank(msg):
+def change_bank(data):
     """Check incoming bank change messages."""
 
     global active_bank
 
-    if (
-        int(msg['translate']['bank']) == 0 and
-        msg['translate']['output-device'].lower() == 'bank'
-    ):
-        active_bank = int(msg['translate']['o-channel'])
-        reset_banks(msg)
-        msg = None
-    return msg
+    def reset_banks(data):
+        """Turn all bank buttons off and turn on the active bank."""
+        midi = data['msg']['midi']
+        banks = [translate['control'] for translate in data['msg'][
+            'translations'] if translate['output-device'] == 'Bank']
+        for bank in banks:
+            data['msg']['outports'].send(Message(
+                type='note_off',
+                channel=midi.channel,
+                note=int(bank),
+            ))
+
+        data['msg']['outports'].send(Message(
+            type='note_on',
+            channel=midi.channel,
+            note=midi.note,
+        ))
+
+    if (int(data['translate']['bank']) == 0 and
+            data['translate']['output-device'].lower() == 'bank'):
+        active_bank = int(data['translate']['o-channel'])
+        reset_banks(data)
+        data = None
+    return data
 
 
-def translate(msg):
+def translate(data):
     """Translate message."""
 
+    midi = data['msg']['midi']
     return {
-        'type': getattr(msg['current']['midi'], 'type'),
-        'channel': int(msg['translate']['o-channel']) - 1,
-        'control': msg['translate']['o-control'],
-        'level': msg['current']['level'],
-        'translations': msg['current']['translations'],
-        'outports': msg['current']['outports'],
+        'type': midi.type,
+        'channel': int(data['translate']['o-channel']) - 1,
+        'control': data['translate']['o-control'],
+        'level': data['msg']['level'],
+        'midi': midi,
+        'translations': data['msg']['translations'],
+        'outports': data['msg']['outports'],
     }
 
 
@@ -147,12 +165,12 @@ def log(msg):
     """Log message to console."""
 
     print('[{}] {}__{} => {}__{:<25} {}'.format(
-        msg['translate']['bank'],
+        active_bank,
         msg['translate']['input-device'],
         msg['translate']['description'],
         msg['translate']['output-device'],
         msg['translate']['o-description'],
-        msg['current']['level'],
+        msg['msg']['level'],
     ))
 
 
@@ -201,23 +219,3 @@ def send_nrpn(msg, control, outports):
         'level': 0,
         'type': msg['type']
     }, outports)
-
-
-def reset_banks(msg):
-    """Turn all bank buttons off and turn on the active bank."""
-
-    midi = msg['current']['midi']
-    banks = [t['control'] for t in msg['current'][
-        'translations'] if t['output-device'] == 'Bank']
-    for bank in banks:
-        msg['current']['outports'].send(Message(
-            type='note_off',
-            channel=midi.channel,
-            note=int(bank),
-        ))
-
-    msg['current']['outports'].send(Message(
-        type='note_on',
-        channel=midi.channel,
-        note=midi.note,
-    ))
