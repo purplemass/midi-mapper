@@ -71,42 +71,97 @@ def check(msg):
     } for t in translations if check(t)]
 
 
-def process(msg):
+def process(midi):
     """Process incoming message."""
 
-    if msg.type == 'control_change':
+    if midi.type == 'control_change':
         mtype = 'CC'
-        value = msg.value
-        control = msg.control
-    elif msg.type == 'note_off':
+        level = midi.value
+        control = midi.control
+    elif midi.type == 'note_off':
         mtype = 'OFF'
-        value = msg.velocity
-        control = msg.note
-    elif msg.type == 'note_on':
+        level = midi.velocity
+        control = midi.note
+    elif midi.type == 'note_on':
         mtype = 'ON'
-        value = msg.velocity
-        control = msg.note
+        level = midi.velocity
+        control = midi.note
 
     return {
         'type': mtype,
-        'channel': msg.channel + 1,
+        'channel': midi.channel + 1,
         'control': control,
-        'value': value,
-        'midi': msg,
+        'level': level,
+        'midi': midi,
     }
 
 
 def translate(msg):
     """Translate message."""
 
-    channel = int(msg['translate']['o-channel']) - 1
-    translated = Message(
-        type=getattr(msg['current']['midi'], 'type'),
-        channel=channel,
-        control=int(msg['translate']['o-control']),
-        value=msg['current']['value'],
-    )
-    return translated
+    return {
+        'type': getattr(msg['current']['midi'], 'type'),
+        'channel': int(msg['translate']['o-channel']) - 1,
+        'control': msg['translate']['o-control'],
+        'level': msg['current']['level'],
+    }
+
+
+def send(msg, outports):
+    """Send MIDI or NRPN message to output ports."""
+
+    control = msg['control'].split(':')
+    if len(control) == 2:
+        send_nrpn(msg, control, outports)
+    else:
+        send_midi(msg, outports)
+
+
+def send_midi(msg, outports):
+    """Send MIDI to output ports."""
+
+    outports.send(Message(
+        channel=msg['channel'],
+        control=int(msg['control']),
+        value=msg['level'],
+        type=msg['type']
+    ))
+
+
+def send_nrpn(msg, control, outports):
+    """Send NRPN message of the following format:
+
+        MIDI # 16 CC 99 = control[0]
+        MIDI # 16 CC 98 = control[1]
+        MIDI # 16 CC 6 = level
+        MIDI # 16 CC 38 = 0
+
+        Note that control is formatted like: '1:9'
+    """
+    send_midi({
+        'channel': msg['channel'],
+        'control': 99,
+        'level': int(control[0]),
+        'type': msg['type']
+    }, outports)
+    send_midi({
+        'channel': msg['channel'],
+        'control': 98,
+        'level': int(control[1]),
+        'type': msg['type']
+    }, outports)
+    send_midi({
+        'channel': msg['channel'],
+        'control': 6,
+        'level': msg['level'],
+        'type': msg['type']
+    }, outports)
+    send_midi({
+        'channel': msg['channel'],
+        'control': 38,
+        'level': 0,
+        'type': msg['type']
+    }, outports)
 
 
 def log(msg):
@@ -118,5 +173,5 @@ def log(msg):
         msg['translate']['description'],
         msg['translate']['output-device'],
         msg['translate']['o-description'],
-        msg['current']['value'],
+        msg['current']['level'],
     ))

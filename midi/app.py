@@ -12,6 +12,7 @@ from utils import (
     check,
     process,
     translate,
+    send,
     log,
 )
 
@@ -28,7 +29,7 @@ def main():
         ops.map(lambda x: x[0]),
         ops.do_action(lambda x: log(x)),
         ops.map(lambda x: translate(x)),
-        ops.do_action(lambda x: outports.send(x)),
+        ops.do_action(lambda x: send(x, outports)),
     ).subscribe()
 
     while True:
