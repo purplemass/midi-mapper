@@ -14,7 +14,8 @@ active_bank = 1
 def csv_dict_list(filename):
     """Read translations CSV file and convert to a dictionary.
 
-    Ensure output fieldnames are not the same as input fieldnames.
+    Ensure output fieldnames are not the same as input fieldnames and
+    add 'memory' to remember readings per bank.
     """
 
     with open(filename, 'r') as fd:
@@ -28,6 +29,8 @@ def csv_dict_list(filename):
             if 'output' in name:
                 prefix_output_fieldname = True
         data = list(csv.DictReader(fd, fieldnames))
+    for d in data:
+        d['memory'] = 0
     return data
 
 
@@ -110,8 +113,11 @@ def change_bank(data):
 
     global active_bank
 
-    def reset_banks(data):
-        """Turn all bank buttons off and turn on the active bank."""
+    def reset_banks_and_controls(data):
+        """Turn all bank buttons off and turn on the active bank.
+
+        Reset controls to their memory value.
+        """
         midi = data['msg']['midi']
         banks = [translate['control'] for translate in data['msg'][
             'translations'] if translate['output-device'] == 'Bank']
@@ -120,6 +126,16 @@ def change_bank(data):
                 type='note_off',
                 channel=midi.channel,
                 note=int(bank),
+            ))
+
+        resets = [translate for translate in data['msg'][
+            'translations'] if int(translate['bank']) == active_bank]
+        for reset in resets:
+            data['msg']['outports'].send(Message(
+                type='control_change',
+                channel=int(reset['channel']) - 1,
+                control=int(reset['control']),
+                value=int(reset['memory']),
             ))
 
         data['msg']['outports'].send(Message(
@@ -131,7 +147,7 @@ def change_bank(data):
     if (int(data['translate']['bank']) == 0 and
             data['translate']['output-device'].lower() == 'bank'):
         active_bank = int(data['translate']['o-channel'])
-        reset_banks(data)
+        reset_banks_and_controls(data)
         data = None
     return data
 
@@ -140,6 +156,7 @@ def translate(data):
     """Translate message."""
 
     midi = data['msg']['midi']
+    data['translate']['memory'] = data['msg']['level']
     return {
         'type': midi.type,
         'channel': int(data['translate']['o-channel']) - 1,
