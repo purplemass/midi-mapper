@@ -2,6 +2,7 @@
 
 import csv
 import sys
+from os import listdir
 
 import mido
 from mido.ports import MultiPort
@@ -11,8 +12,17 @@ from mido import Message
 active_bank = 1
 
 
+def import_mappings(folder):
+    data = []
+    files = filter(lambda x: x.endswith('.csv'), listdir(folder))
+    for filename in files:
+        csv = csv_dict_list(f'{folder}/{filename}')
+        data += csv
+    return data
+
+
 def csv_dict_list(filename):
-    """Read translations CSV file and convert to a dictionary.
+    """Read mappings CSV file and convert to a dictionary.
 
     Ensure output fieldnames are not the same as input fieldnames and
     add 'memory' to remember readings per bank.
@@ -59,7 +69,7 @@ def io_ports(midi_stream):
     return inports, outports
 
 
-def process(midi, translations, outports):
+def process(midi, mappings, outports):
     """Process incoming message."""
 
     if midi.type == 'control_change':
@@ -85,7 +95,7 @@ def process(midi, translations, outports):
         'control': control,
         'level': level,
         'midi': midi,
-        'translations': translations,
+        'mappings': mappings,
         'outports': outports,
     }
 
@@ -93,19 +103,19 @@ def process(midi, translations, outports):
 def check(msg):
     """Check incoming message."""
 
-    def check(translation):
+    def check(mapping):
         return (
-            translation['type'] == msg['type'] and
-            int(translation['channel']) == msg['channel'] and
-            int(translation['control']) == msg['control'] and
-            (int(translation['bank']) == 0 or
-                int(translation['bank']) == active_bank)
+            mapping['type'] == msg['type'] and
+            int(mapping['channel']) == msg['channel'] and
+            int(mapping['control']) == msg['control'] and
+            (int(mapping['bank']) == 0 or
+                int(mapping['bank']) == active_bank)
         )
 
     return [{
         'translate': translate,
         'msg': msg
-    } for translate in msg['translations'] if check(translate)]
+    } for translate in msg['mappings'] if check(translate)]
 
 
 def change_bank(data):
@@ -120,7 +130,7 @@ def change_bank(data):
         """
         midi = data['msg']['midi']
         banks = [translate['control'] for translate in data['msg'][
-            'translations'] if translate['output-device'] == 'Bank']
+            'mappings'] if translate['output-device'] == 'Bank']
         for bank in banks:
             data['msg']['outports'].send(Message(
                 type='note_off',
@@ -129,7 +139,7 @@ def change_bank(data):
             ))
 
         resets = [translate for translate in data['msg'][
-            'translations'] if int(translate['bank']) == active_bank]
+            'mappings'] if int(translate['bank']) == active_bank]
         for reset in resets:
             data['msg']['outports'].send(Message(
                 type='control_change',
@@ -163,7 +173,7 @@ def translate(data):
         'control': data['translate']['o-control'],
         'level': data['msg']['level'],
         'midi': midi,
-        'translations': data['msg']['translations'],
+        'mappings': data['msg']['mappings'],
         'outports': data['msg']['outports'],
     }
 

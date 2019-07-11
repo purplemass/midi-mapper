@@ -8,9 +8,9 @@ from rx.subject import Subject
 from rx import operators as ops
 
 from utils import (
-    csv_dict_list,
     check,
     change_bank,
+    import_mappings,
     io_ports,
     process,
     translate,
@@ -18,17 +18,18 @@ from utils import (
     log,
 )
 
+MAPPINGS_FOLDER = './mappings/'
+
 
 def main():
     """Main loop of the application."""
 
-    TRANSLATIONS_FILE = './mappings/mappings.csv'
-    translations = csv_dict_list(TRANSLATIONS_FILE)
+    mappings = import_mappings(MAPPINGS_FOLDER)
 
     midi_stream = Subject()
     _, outports = io_ports(midi_stream)
     midi_stream.pipe(
-        ops.map(lambda x: process(x, translations, outports)),
+        ops.map(lambda x: process(x, mappings, outports)),
         ops.map(lambda x: check(x)),
         ops.filter(lambda x: len(x) > 0),
         ops.map(lambda x: x[0]),
