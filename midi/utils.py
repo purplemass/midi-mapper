@@ -49,24 +49,20 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
     """Process incoming message."""
     midi = data['midi']
     if midi.type == 'control_change':
-        mtype = 'CC'
         control = midi.control
         level = midi.value
     elif midi.type == 'note_off':
-        mtype = 'OFF'
         control = midi.note
         level = midi.velocity
     elif midi.type == 'note_on':
-        mtype = 'ON'
         control = midi.note
         level = midi.velocity
     elif midi.type == 'program_change':
-        mtype = 'PG'
         control = midi.program
         level = 0
 
     data['msg'] = {
-        'type': mtype,
+        'type': midi.type,
         'channel': midi.channel + 1,
         'control': control,
         'level': level,
@@ -118,7 +114,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
         mappings = data['mappings']
         midi = data['midi']
         banks = [translate['control'] for translate in mappings if translate[
-            'output-device'] == 'Bank']
+            'o-type'] == 'bank_change']
         for bank in banks:
             outports.send(Message(
                 type='note_off',
@@ -154,11 +150,10 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
 
 def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate message and send."""
-    midi = data['midi']
     for translate in data['translate']:
         translate['memory'] = data['msg']['level']
         msg = {
-            'type': midi.type,
+            'type': translate['o-type'],
             'channel': int(translate['o-channel']) - 1,
             'control': translate['o-control'],
             'level': data['msg']['level'],
@@ -177,7 +172,6 @@ def send(msg, outports) -> None:
 
 def send_midi(msg, outports) -> None:
     """Send MIDI to output ports."""
-    midi = None
     if msg['type'] == 'control_change':
         midi = Message(
             type=msg['type'],
@@ -185,13 +179,19 @@ def send_midi(msg, outports) -> None:
             control=int(msg['control']),
             value=msg['level'],
         )
-    elif msg['type'] == 'note_off' or msg['type'] == 'note_on':
-        print(msg)
+    elif msg['type'] == 'note_off':
         midi = Message(
             type=msg['type'],
             channel=msg['channel'],
             note=int(msg['control']),
-            velocity=int(msg['level']),
+            velocity=0,
+        )
+    elif msg['type'] == 'note_on':
+        midi = Message(
+            type=msg['type'],
+            channel=msg['channel'],
+            note=int(msg['control']),
+            velocity=127,
         )
     elif msg['type'] == 'program_change':
         midi = Message(
