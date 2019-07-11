@@ -1,5 +1,4 @@
 """Translate midi messages between input/output devices."""
-
 import signal
 import sys
 import time
@@ -7,10 +6,10 @@ import time
 from rx.subject import Subject
 from rx import operators as ops
 
+from mappings import import_mappings
 from utils import (
     check,
     change_bank,
-    import_mappings,
     io_ports,
     process,
     translate,

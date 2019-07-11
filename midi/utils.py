@@ -1,47 +1,12 @@
 """Utility functions."""
-
-import csv
 import sys
-from os import listdir
 
-import mido
-from mido.ports import MultiPort
+import mido  # type: ignore
+from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
 
 active_bank = 1
-
-
-def import_mappings(folder):
-    data = []
-    files = filter(lambda x: x.endswith('.csv'), listdir(folder))
-    for filename in files:
-        csv = csv_dict_list(f'{folder}/{filename}')
-        data += csv
-    return data
-
-
-def csv_dict_list(filename):
-    """Read mappings CSV file and convert to a dictionary.
-
-    Ensure output fieldnames are not the same as input fieldnames and
-    add 'memory' to remember readings per bank.
-    """
-
-    with open(filename, 'r') as fd:
-        reader = csv.reader(fd, delimiter=',')
-        fieldnames = next(reader)
-        fieldnames = [f.lower().replace(' ', '-') for f in fieldnames]
-        prefix_output_fieldname = False
-        for idx, name in enumerate(fieldnames):
-            if prefix_output_fieldname is True:
-                fieldnames[idx] = f'o-{fieldnames[idx]}'
-            if 'output' in name:
-                prefix_output_fieldname = True
-        data = list(csv.DictReader(fd, fieldnames))
-    for d in data:
-        d['memory'] = 0
-    return data
 
 
 def io_ports(midi_stream):
@@ -71,7 +36,6 @@ def io_ports(midi_stream):
 
 def process(midi, mappings, outports):
     """Process incoming message."""
-
     if midi.type == 'control_change':
         mtype = 'CC'
         control = midi.control
@@ -164,7 +128,6 @@ def change_bank(data):
 
 def translate(data):
     """Translate message."""
-
     midi = data['msg']['midi']
     data['translate']['memory'] = data['msg']['level']
     return {
@@ -178,9 +141,8 @@ def translate(data):
     }
 
 
-def send(msg):
+def send(msg) -> None:
     """Send MIDI or NRPN message to output ports."""
-
     control = msg['control'].split(':')
     if len(control) == 2:
         send_nrpn(msg, control, msg['outports'])
@@ -188,9 +150,8 @@ def send(msg):
         send_midi(msg, msg['outports'])
 
 
-def log(msg):
+def log(msg) -> None:
     """Log message to console."""
-
     print('[{}] {}__{} => {}__{:<25} {}'.format(
         active_bank,
         msg['translate']['input-device'],
@@ -201,9 +162,8 @@ def log(msg):
     ))
 
 
-def send_midi(msg, outports):
+def send_midi(msg, outports) -> None:
     """Send MIDI to output ports."""
-
     outports.send(Message(
         channel=msg['channel'],
         control=int(msg['control']),
@@ -212,7 +172,7 @@ def send_midi(msg, outports):
     ))
 
 
-def send_nrpn(msg, control, outports):
+def send_nrpn(msg, control, outports) -> None:
     """Send NRPN message of the following format:
 
         MIDI # 16 CC 99 = control[0]

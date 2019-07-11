@@ -9,6 +9,9 @@ debug:
 test:
 	clear; pytest
 
+type:
+	clear; mypy midi/
+
 put:
 	scp main.py config.py pi@192.168.1.17:/home/pi/
 
