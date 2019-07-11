@@ -59,7 +59,13 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
         level = midi.velocity
     elif midi.type == 'program_change':
         control = midi.program
-        level = 0
+        level = None
+    elif midi.type == 'aftertouch':
+        control = None
+        level = midi.value
+    elif midi.type == 'pitchwheel':
+        control = None
+        level = midi.pitch
 
     data['msg'] = {
         'type': midi.type,
@@ -149,7 +155,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Translate message and send."""
+    """Translate messages and send."""
     for translate in data['translate']:
         translate['memory'] = data['msg']['level']
         msg = {
@@ -198,6 +204,16 @@ def send_midi(msg, outports) -> None:
             type=msg['type'],
             channel=msg['channel'],
             program=int(msg['control']),
+        )
+    elif msg['type'] == 'aftertouch':
+        midi = Message(
+            type=msg['type'],
+            value=msg['level'],
+        )
+    elif msg['type'] == 'pitchwheel':
+        midi = Message(
+            type=msg['type'],
+            pitch=msg['level'],
         )
 
     outports.send(midi)
