@@ -7,10 +7,7 @@ debug:
 	clear; python3 midi/app.py -v
 
 test:
-	clear; pytest
-
-type:
-	clear; mypy midi/
+	clear; mypy midi/ && pytest
 
 put:
 	scp main.py config.py pi@192.168.1.17:/home/pi/

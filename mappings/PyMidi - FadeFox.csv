@@ -7,3 +7,5 @@ FaderFox,Fader5,CC,0,3,36,=>,Circuit,drum 3 level,10,45
 FaderFox,Fader6,CC,0,3,37,=>,Circuit,drum 4 level,10,53
 FaderFox,Fader7,CC,0,3,38,=>,Circuit,Master Filter frequency,16,74
 FaderFox,Fader8,CC,0,3,39,=>,Circuit,Master Filter resonance,16,71
+FaderFox,Fader1,CC,1,3,32,=>,XTouch Mini,synth1 volume,11,1
+FaderFox,Fader2,CC,1,3,33,=>,XTouch Mini,synth2 volume,11,2

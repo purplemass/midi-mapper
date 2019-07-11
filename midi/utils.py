@@ -1,4 +1,5 @@
 """Utility functions."""
+from typing import Any, Dict, Tuple
 import sys
 
 import mido  # type: ignore
@@ -9,10 +10,10 @@ from mido import Message
 active_bank = 1
 
 
-def io_ports(midi_stream):
+def io_ports(midi_stream: Any) -> Tuple[Any, Any]:
     """Create input/output ports and add incoming messages to the stream."""
 
-    def input_message(msg):
+    def input_message(msg: Message) -> None:
         if (
             msg.type != 'clock' and
             msg.type != 'start' and
@@ -34,7 +35,7 @@ def io_ports(midi_stream):
     return inports, outports
 
 
-def create_stream_data(midi, mappings, outports):
+def create_stream_data(midi, mappings, outports) -> Dict[str, Any]:
     return {
         'msg': {},
         'midi': midi,
@@ -44,7 +45,7 @@ def create_stream_data(midi, mappings, outports):
     }
 
 
-def process_midi(data):
+def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
     """Process incoming message."""
     midi = data['midi']
     if midi.type == 'control_change':
@@ -73,7 +74,7 @@ def process_midi(data):
     return data
 
 
-def check_mappings(data):
+def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
     """Check incoming message for matches in mappings."""
 
     def check(mapping):
@@ -90,8 +91,8 @@ def check_mappings(data):
     return data
 
 
-def log(data) -> None:
-    """Log message to console."""
+def log(data: Dict[str, Any]) -> None:
+    """Log messages to console."""
     for translate in data['translate']:
         print('[{}] {}__{} => {}__{:<25} {}'.format(
             active_bank,
@@ -103,12 +104,12 @@ def log(data) -> None:
         ))
 
 
-def change_bank(data):
+def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
     """Check incoming bank change messages."""
 
     global active_bank
 
-    def reset_banks_and_controls(data):
+    def reset_banks_and_controls(data: Dict[str, Any]) -> None:
         """Turn all bank buttons off and turn on the active bank.
 
         Reset controls to their memory value.
@@ -151,7 +152,7 @@ def change_bank(data):
     return data
 
 
-def translate_and_send(data):
+def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate message and send."""
     midi = data['midi']
     for translate in data['translate']:

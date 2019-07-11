@@ -20,7 +20,7 @@ from utils import (
 MAPPINGS_FOLDER = './mappings/'
 
 
-def main():
+def main() -> None:
     """Main loop of the application."""
 
     mappings = import_mappings(MAPPINGS_FOLDER)
@@ -43,7 +43,7 @@ def main():
 if __name__ == "__main__":
     """Add keyboard interupt handler and run main."""
 
-    def signal_handler(signal, frame):
+    def signal_handler(signal, frame) -> None:
         print('\033[H\033[J')
         print('Keyboard interupt detected')
         sys.exit(0)
