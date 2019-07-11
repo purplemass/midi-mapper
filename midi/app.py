@@ -8,13 +8,15 @@ from rx import operators as ops
 
 from mappings import import_mappings
 from utils import (
+    get_bank_message,
+    io_ports,
+)
+from stream import (
     change_bank,
     check_mappings,
     create_stream_data,
-    io_ports,
     log,
     process_midi,
-    get_bank_message,
     translate_and_send,
 )
 
