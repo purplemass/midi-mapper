@@ -29,7 +29,6 @@ def main() -> None:
     midi_stream = Subject()
     _, outports = io_ports(midi_stream)
     midi_stream.pipe(
-        ops.do_action(lambda x: print(x)),
         ops.map(lambda x: create_stream_data(x, mappings, outports)),
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),

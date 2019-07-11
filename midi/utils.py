@@ -177,12 +177,30 @@ def send(msg, outports) -> None:
 
 def send_midi(msg, outports) -> None:
     """Send MIDI to output ports."""
-    outports.send(Message(
-        type=msg['type'],
-        channel=msg['channel'],
-        control=int(msg['control']),
-        value=msg['level'],
-    ))
+    midi = None
+    if msg['type'] == 'control_change':
+        midi = Message(
+            type=msg['type'],
+            channel=msg['channel'],
+            control=int(msg['control']),
+            value=msg['level'],
+        )
+    elif msg['type'] == 'note_off' or msg['type'] == 'note_on':
+        print(msg)
+        midi = Message(
+            type=msg['type'],
+            channel=msg['channel'],
+            note=int(msg['control']),
+            velocity=int(msg['level']),
+        )
+    elif msg['type'] == 'program_change':
+        midi = Message(
+            type=msg['type'],
+            channel=msg['channel'],
+            program=int(msg['control']),
+        )
+
+    outports.send(midi)
 
 
 def send_nrpn(msg, outports) -> None:
