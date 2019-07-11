@@ -8,13 +8,13 @@ from rx import operators as ops
 
 from mappings import import_mappings
 from utils import (
-    check,
     change_bank,
+    check_mappings,
+    create_stream_data,
     io_ports,
-    process,
-    translate,
-    send,
     log,
+    process_midi,
+    translate_and_send,
 )
 
 MAPPINGS_FOLDER = './mappings/'
@@ -28,15 +28,12 @@ def main():
     midi_stream = Subject()
     _, outports = io_ports(midi_stream)
     midi_stream.pipe(
-        ops.map(lambda x: process(x, mappings, outports)),
-        ops.map(lambda x: check(x)),
-        ops.filter(lambda x: len(x) > 0),
-        ops.map(lambda x: x[0]),
-        ops.do_action(lambda x: log(x)),
+        ops.map(lambda x: create_stream_data(x, mappings, outports)),
+        ops.map(lambda x: process_midi(x)),
+        ops.map(lambda x: check_mappings(x)),
         ops.map(lambda x: change_bank(x)),
-        ops.filter(lambda x: x is not None),
-        ops.map(lambda x: translate(x)),
-        ops.do_action(lambda x: send(x)),
+        ops.map(lambda x: translate_and_send(x)),
+        ops.do_action(lambda x: log(x)),
     ).subscribe()
 
     while True:

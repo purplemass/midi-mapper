@@ -34,8 +34,19 @@ def io_ports(midi_stream):
     return inports, outports
 
 
-def process(midi, mappings, outports):
+def create_stream_data(midi, mappings, outports):
+    return {
+        'msg': {},
+        'midi': midi,
+        'mappings': mappings,
+        'outports': outports,
+        'translate': [],
+    }
+
+
+def process_midi(data):
     """Process incoming message."""
+    midi = data['midi']
     if midi.type == 'control_change':
         mtype = 'CC'
         control = midi.control
@@ -53,33 +64,43 @@ def process(midi, mappings, outports):
         control = midi.program
         level = 0
 
-    return {
+    data['msg'] = {
         'type': mtype,
         'channel': midi.channel + 1,
         'control': control,
         'level': level,
-        'midi': midi,
-        'mappings': mappings,
-        'outports': outports,
     }
+    return data
 
 
-def check(msg):
-    """Check incoming message."""
+def check_mappings(data):
+    """Check incoming message for matches in mappings."""
 
     def check(mapping):
         return (
-            mapping['type'] == msg['type'] and
-            int(mapping['channel']) == msg['channel'] and
-            int(mapping['control']) == msg['control'] and
+            mapping['type'] == data['msg']['type'] and
+            int(mapping['channel']) == data['msg']['channel'] and
+            int(mapping['control']) == data['msg']['control'] and
             (int(mapping['bank']) == 0 or
                 int(mapping['bank']) == active_bank)
         )
 
-    return [{
-        'translate': translate,
-        'msg': msg
-    } for translate in msg['mappings'] if check(translate)]
+    data['translate'] = [
+        translate for translate in data['mappings'] if check(translate)]
+    return data
+
+
+def log(data) -> None:
+    """Log message to console."""
+    for translate in data['translate']:
+        print('[{}] {}__{} => {}__{:<25} {}'.format(
+            active_bank,
+            translate['input-device'],
+            translate['description'],
+            translate['output-device'],
+            translate['o-description'],
+            data['msg']['level'],
+        ))
 
 
 def change_bank(data):
@@ -92,87 +113,78 @@ def change_bank(data):
 
         Reset controls to their memory value.
         """
-        midi = data['msg']['midi']
-        banks = [translate['control'] for translate in data['msg'][
-            'mappings'] if translate['output-device'] == 'Bank']
+        outports = data['outports']
+        mappings = data['mappings']
+        midi = data['midi']
+        banks = [translate['control'] for translate in mappings if translate[
+            'output-device'] == 'Bank']
         for bank in banks:
-            data['msg']['outports'].send(Message(
+            outports.send(Message(
                 type='note_off',
                 channel=midi.channel,
                 note=int(bank),
             ))
 
-        resets = [translate for translate in data['msg'][
-            'mappings'] if int(translate['bank']) == active_bank]
+        resets = [translate for translate in mappings if int(
+            translate['bank']) == active_bank]
         for reset in resets:
-            data['msg']['outports'].send(Message(
+            outports.send(Message(
                 type='control_change',
                 channel=int(reset['channel']) - 1,
                 control=int(reset['control']),
                 value=int(reset['memory']),
             ))
 
-        data['msg']['outports'].send(Message(
+        outports.send(Message(
             type='note_on',
             channel=midi.channel,
             note=midi.note,
         ))
 
-    if (int(data['translate']['bank']) == 0 and
-            data['translate']['output-device'].lower() == 'bank'):
-        active_bank = int(data['translate']['o-channel'])
-        reset_banks_and_controls(data)
-        data = None
+    for translate in data['translate']:
+        if (int(translate['bank']) == 0 and
+                translate['output-device'].lower() == 'bank'):
+            active_bank = int(translate['o-channel'])
+            reset_banks_and_controls(data)
+            data['translate'] = []
+            break
     return data
 
 
-def translate(data):
-    """Translate message."""
-    midi = data['msg']['midi']
-    data['translate']['memory'] = data['msg']['level']
-    return {
-        'type': midi.type,
-        'channel': int(data['translate']['o-channel']) - 1,
-        'control': data['translate']['o-control'],
-        'level': data['msg']['level'],
-        'midi': midi,
-        'mappings': data['msg']['mappings'],
-        'outports': data['msg']['outports'],
-    }
+def translate_and_send(data):
+    """Translate message and send."""
+    midi = data['midi']
+    for translate in data['translate']:
+        translate['memory'] = data['msg']['level']
+        msg = {
+            'type': midi.type,
+            'channel': int(translate['o-channel']) - 1,
+            'control': translate['o-control'],
+            'level': data['msg']['level'],
+        }
+        send(msg, data['outports'])
+    return data
 
 
-def send(msg) -> None:
+def send(msg, outports) -> None:
     """Send MIDI or NRPN message to output ports."""
-    control = msg['control'].split(':')
-    if len(control) == 2:
-        send_nrpn(msg, control, msg['outports'])
+    if len(msg['control'].split(':')) == 2:
+        send_nrpn(msg, outports)
     else:
-        send_midi(msg, msg['outports'])
-
-
-def log(msg) -> None:
-    """Log message to console."""
-    print('[{}] {}__{} => {}__{:<25} {}'.format(
-        active_bank,
-        msg['translate']['input-device'],
-        msg['translate']['description'],
-        msg['translate']['output-device'],
-        msg['translate']['o-description'],
-        msg['msg']['level'],
-    ))
+        send_midi(msg, outports)
 
 
 def send_midi(msg, outports) -> None:
     """Send MIDI to output ports."""
     outports.send(Message(
+        type=msg['type'],
         channel=msg['channel'],
         control=int(msg['control']),
         value=msg['level'],
-        type=msg['type']
     ))
 
 
-def send_nrpn(msg, control, outports) -> None:
+def send_nrpn(msg, outports) -> None:
     """Send NRPN message of the following format:
 
         MIDI # 16 CC 99 = control[0]
@@ -182,27 +194,28 @@ def send_nrpn(msg, control, outports) -> None:
 
         Note that control is formatted like: '1:9'
     """
+    control = msg['control'].split(':')
     send_midi({
+        'type': msg['type'],
         'channel': msg['channel'],
         'control': 99,
         'level': int(control[0]),
-        'type': msg['type']
     }, outports)
     send_midi({
+        'type': msg['type'],
         'channel': msg['channel'],
         'control': 98,
         'level': int(control[1]),
-        'type': msg['type']
     }, outports)
     send_midi({
+        'type': msg['type'],
         'channel': msg['channel'],
         'control': 6,
         'level': msg['level'],
-        'type': msg['type']
     }, outports)
     send_midi({
+        'type': msg['type'],
         'channel': msg['channel'],
         'control': 38,
         'level': 0,
-        'type': msg['type']
     }, outports)
