@@ -4,7 +4,7 @@ import signal
 import sys
 import time
 
-from rx.subjects import Subject
+from rx.subject import Subject
 from rx import operators as ops
 
 from utils import (
