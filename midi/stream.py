@@ -77,11 +77,11 @@ def log(data: Dict[str, Any]) -> None:
 
 
 def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Check incoming bank change messages."""
+    """Check incoming bank_change messages."""
 
     global active_bank
 
-    def reset_banks_and_controls(data: Dict[str, Any]) -> None:
+    def reset_banks_and_controls() -> None:
         """Turn all bank buttons off and turn on the active bank.
 
         Reset controls to their memory value.
@@ -90,11 +90,12 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
         banks = [mapping['control'] for mapping in data['mappings'] if (
             mapping['o-type'] == 'bank_change')]
         for bank in banks:
-            send_message({
-                'type': 'note_off',
-                'channel': midi.channel,
-                'status': int(bank),
-            }, data['outports'])
+            if midi.note != int(bank):
+                send_message({
+                    'type': 'note_off',
+                    'channel': midi.channel,
+                    'status': int(bank),
+                }, data['outports'])
 
         resets = [mapping for mapping in data['mappings'] if (
             int(mapping['bank']) == active_bank)]
@@ -106,17 +107,11 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
                 'level': int(reset['memory']),
             }, data['outports'])
 
-        send_message({
-            'type': 'note_on',
-            'channel': midi.channel,
-            'status': midi.note,
-        }, data['outports'])
-
     for translation in data['translations']:
         if (int(translation['bank']) == 0 and
                 translation['o-type'] == 'bank_change'):
-            active_bank = int(translation['o-channel'])
-            reset_banks_and_controls(data)
+            active_bank = int(translation['o-control'])
+            reset_banks_and_controls()
             data['translations'] = []
             break
     return data

@@ -34,13 +34,13 @@ def main() -> None:
         ops.map(lambda x: create_stream_data(x, mappings, outports)),
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
-        ops.do_action(lambda x: log(x)),
         ops.map(lambda x: change_bank(x)),
+        ops.do_action(lambda x: log(x)),
         ops.map(lambda x: translate_and_send(x)),
     ).subscribe()
 
     # send bank 1 message to reset controller
-    reset_bank_message = get_bank_message(mappings)
+    reset_bank_message = get_bank_message(mappings, outports)
     if reset_bank_message is not None:
         midi_stream.on_next(reset_bank_message)
 

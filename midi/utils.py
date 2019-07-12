@@ -120,17 +120,21 @@ def send_nrpn(msg, outports) -> None:
     }, outports)
 
 
-def get_bank_message(mappings):
+def get_bank_message(mappings, outports):
     """Get Midi message bank 1."""
     bank_one = [m for m in mappings if (
         m['o-type'] == 'bank_change' and
-        m['o-channel'] == '1') and
-        m['type'] == 'OFF']
+        m['o-control'] == '1')]
     if len(bank_one) > 0:
+        send_message({
+            'type': 'note_on',
+            'channel': int(bank_one[0]['channel']) - 1,
+            'status': int(bank_one[0]['control']),
+        }, outports)
         return Message(
             type='note_on',
             channel=int(bank_one[0]['channel']) - 1,
-            note=int(bank_one[0]['status']),
+            note=int(bank_one[0]['control']),
             velocity=127,
         )
     return None
