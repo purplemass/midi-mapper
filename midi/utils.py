@@ -32,9 +32,9 @@ def io_ports(midi_stream: Any) -> Tuple[Any, Any]:
     return inports, outports
 
 
-def send(msg, outports) -> None:
+def send_message(msg, outports) -> None:
     """Send MIDI or NRPN message to output ports."""
-    if len(msg['control'].split(':')) == 2:
+    if type(msg['control']) == str and len(msg['control'].split(':')) == 2:
         send_nrpn(msg, outports)
     else:
         send_midi(msg, outports)

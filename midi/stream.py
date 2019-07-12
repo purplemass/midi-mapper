@@ -1,9 +1,7 @@
 """Utility functions."""
 from typing import Any, Dict
 
-from mido import Message
-
-from utils import send
+from utils import send_message
 
 
 active_bank = 1
@@ -96,27 +94,27 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
         banks = [translate['control'] for translate in mappings if translate[
             'o-type'] == 'bank_change']
         for bank in banks:
-            outports.send(Message(
-                type='note_off',
-                channel=midi.channel,
-                note=int(bank),
-            ))
+            send_message({
+                'type': 'note_off',
+                'channel': midi.channel,
+                'control': int(bank),
+            }, outports)
 
         resets = [translate for translate in mappings if int(
             translate['bank']) == active_bank]
         for reset in resets:
-            outports.send(Message(
-                type='control_change',
-                channel=int(reset['channel']) - 1,
-                control=int(reset['control']),
-                value=int(reset['memory']),
-            ))
+            send_message({
+                'type': 'control_change',
+                'channel': int(reset['channel']) - 1,
+                'control': int(reset['control']),
+                'level': int(reset['memory']),
+            }, outports)
 
-        outports.send(Message(
-            type='note_on',
-            channel=midi.channel,
-            note=midi.note,
-        ))
+        send_message({
+            'type': 'note_on',
+            'channel': midi.channel,
+            'control': midi.note,
+        }, outports)
 
     for translate in data['translate']:
         if (int(translate['bank']) == 0 and
@@ -132,11 +130,10 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
     for translate in data['translate']:
         translate['memory'] = data['msg']['level']
-        msg = {
+        send_message({
             'type': translate['o-type'],
             'channel': int(translate['o-channel']) - 1,
             'control': translate['o-control'],
             'level': data['msg']['level'],
-        }
-        send(msg, data['outports'])
+        }, data['outports'])
     return data
