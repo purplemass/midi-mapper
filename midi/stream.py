@@ -13,7 +13,7 @@ def create_stream_data(midi, mappings, outports) -> Dict[str, Any]:
         'midi': midi,
         'mappings': mappings,
         'outports': outports,
-        'translate': [],
+        'translations': [],
     }
 
 
@@ -59,19 +59,19 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
                 int(mapping['bank']) == active_bank)
         )
 
-    data['translate'] = [m for m in data['mappings'] if check(m)]
+    data['translations'] = [m for m in data['mappings'] if check(m)]
     return data
 
 
 def log(data: Dict[str, Any]) -> None:
     """Log messages to console."""
-    for translate in data['translate']:
+    for translation in data['translations']:
         print('[{}] {}__{} => {}__{:<25} {}'.format(
             active_bank,
-            translate['input-device'],
-            translate['description'],
-            translate['output-device'],
-            translate['o-description'],
+            translation['input-device'],
+            translation['description'],
+            translation['output-device'],
+            translation['o-description'],
             data['msg']['level'],
         ))
 
@@ -112,24 +112,24 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
             'status': midi.note,
         }, data['outports'])
 
-    for translate in data['translate']:
-        if (int(translate['bank']) == 0 and
-                translate['o-type'] == 'bank_change'):
-            active_bank = int(translate['o-channel'])
+    for translation in data['translations']:
+        if (int(translation['bank']) == 0 and
+                translation['o-type'] == 'bank_change'):
+            active_bank = int(translation['o-channel'])
             reset_banks_and_controls(data)
-            data['translate'] = []
+            data['translations'] = []
             break
     return data
 
 
 def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
-    for translate in data['translate']:
-        translate['memory'] = data['msg']['level']
+    for translation in data['translations']:
+        translation['memory'] = data['msg']['level']
         send_message({
-            'type': translate['o-type'],
-            'channel': int(translate['o-channel']) - 1,
-            'status': translate['o-control'],
+            'type': translation['o-type'],
+            'channel': int(translation['o-channel']) - 1,
+            'status': translation['o-control'],
             'level': data['msg']['level'],
         }, data['outports'])
     return data
