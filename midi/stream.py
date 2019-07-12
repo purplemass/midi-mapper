@@ -40,7 +40,6 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
         level = midi.pitch
 
     data['msg'] = {
-        'type': midi.type,
         'channel': midi.channel + 1,
         'status': status,
         'level': level,
@@ -53,15 +52,14 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
 
     def check(mapping):
         return (
-            mapping['type'] == data['msg']['type'] and
+            mapping['type'] == getattr(data['midi'], 'type') and
             int(mapping['channel']) == data['msg']['channel'] and
             int(mapping['control']) == data['msg']['status'] and
             (int(mapping['bank']) == 0 or
                 int(mapping['bank']) == active_bank)
         )
 
-    data['translate'] = [
-        translate for translate in data['mappings'] if check(translate)]
+    data['translate'] = [m for m in data['mappings'] if check(m)]
     return data
 
 
@@ -88,37 +86,35 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
 
         Reset controls to their memory value.
         """
-        outports = data['outports']
-        mappings = data['mappings']
         midi = data['midi']
-        banks = [translate['control'] for translate in mappings if translate[
-            'o-type'] == 'bank_change']
+        banks = [mapping['control'] for mapping in data['mappings'] if (
+            mapping['o-type'] == 'bank_change')]
         for bank in banks:
             send_message({
                 'type': 'note_off',
                 'channel': midi.channel,
                 'status': int(bank),
-            }, outports)
+            }, data['outports'])
 
-        resets = [translate for translate in mappings if int(
-            translate['bank']) == active_bank]
+        resets = [mapping for mapping in data['mappings'] if (
+            int(mapping['bank']) == active_bank)]
         for reset in resets:
             send_message({
                 'type': 'control_change',
                 'channel': int(reset['channel']) - 1,
                 'status': int(reset['control']),
                 'level': int(reset['memory']),
-            }, outports)
+            }, data['outports'])
 
         send_message({
             'type': 'note_on',
             'channel': midi.channel,
             'status': midi.note,
-        }, outports)
+        }, data['outports'])
 
     for translate in data['translate']:
         if (int(translate['bank']) == 0 and
-                translate['output-device'].lower() == 'bank'):
+                translate['o-type'] == 'bank_change'):
             active_bank = int(translate['o-channel'])
             reset_banks_and_controls(data)
             data['translate'] = []
