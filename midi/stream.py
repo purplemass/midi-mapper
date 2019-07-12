@@ -2,17 +2,17 @@
 from typing import Any, Dict
 
 from utils import send_message
+from utils import store
 
 
-active_bank = 1
-
-
-def create_stream_data(midi, mappings) -> Dict[str, Any]:
+def create_stream_data(midi) -> Dict[str, Any]:
+    """Create items in the steam to be passed down."""
     return {
         'msg': {},
         'midi': midi,
-        'mappings': mappings,
+        'mappings': store.get('mappings'),
         'translations': [],
+        'store': store,
     }
 
 
@@ -55,7 +55,7 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
             int(mapping['channel']) == data['msg']['channel'] and
             int(mapping['control']) == data['msg']['status'] and
             (int(mapping['bank']) == 0 or
-                int(mapping['bank']) == active_bank)
+                int(mapping['bank']) == data['store'].get('active_bank'))
         )
 
     data['translations'] = [m for m in data['mappings'] if check(m)]
@@ -66,7 +66,7 @@ def log(data: Dict[str, Any]) -> None:
     """Log messages to console."""
     for translation in data['translations']:
         print('[{}] {}__{} => {}__{:<25} {}'.format(
-            active_bank,
+            data['store'].get('active_bank'),
             translation['input-device'],
             translation['description'],
             translation['output-device'],
@@ -77,8 +77,6 @@ def log(data: Dict[str, Any]) -> None:
 
 def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
     """Check incoming bank_change messages."""
-
-    global active_bank
 
     def reset_banks_and_controls() -> None:
         """Turn all bank buttons off and turn on the active bank.
@@ -97,7 +95,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
                 })
 
         resets = [mapping for mapping in data['mappings'] if (
-            int(mapping['bank']) == active_bank)]
+            int(mapping['bank']) == data['store'].get('active_bank'))]
         for reset in resets:
             send_message({
                 'type': 'control_change',
@@ -109,7 +107,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
     for translation in data['translations']:
         if (int(translation['bank']) == 0 and
                 translation['o-type'] == 'bank_change'):
-            active_bank = int(translation['o-control'])
+            data['store'].update('active_bank', int(translation['o-control']))
             reset_banks_and_controls()
             data['translations'] = []
             break

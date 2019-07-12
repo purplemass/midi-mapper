@@ -5,12 +5,15 @@ import csv
 from os import listdir
 
 
-def import_mappings(folder: str) -> List[Dict[str, Any]]:
+MAPPINGS_FOLDER = './mappings/'
+
+
+def import_mappings() -> List[Dict[str, Any]]:
     """List and import CSV files in the specified folder."""
     data: List = []
-    files = filter(lambda x: x.endswith('.csv'), listdir(folder))
+    files = filter(lambda x: x.endswith('.csv'), listdir(MAPPINGS_FOLDER))
     for filename in files:
-        csv = csv_dict_list(f'{folder}/{filename}')
+        csv = csv_dict_list(f'{MAPPINGS_FOLDER}/{filename}')
         data += csv
     return data
 

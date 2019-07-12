@@ -1,5 +1,5 @@
 """Utility functions."""
-from typing import Any, Tuple
+from typing import Any
 import sys
 
 from rx.subject import BehaviorSubject
@@ -8,26 +8,32 @@ import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
+from mappings import import_mappings
 
-store = BehaviorSubject({
+
+class Store(BehaviorSubject):
+    """Simple immutable store."""
+
+    def get(self, key: str) -> Any:
+        """Short method to get values from the store."""
+        return self.value[key]
+
+    def update(self, key: str, value: Any) -> None:
+        """Immutable way to update the store."""
+        if key in self.value:
+            self.on_next({**self.value, **dict({key: value})})
+
+
+store = Store({
     'active_bank': None,
     'active_programe': None,
-    'mappings': None,
+    'mappings': import_mappings(),
     'inports': None,
     'outports': None,
 })
 
 
-def update(key, value):
-    """Immutable way to update the store."""
-    if key in store.value:
-        store.on_next({**store.value, **dict({key: value})})
-
-
-store.update = update
-
-
-def io_ports(midi_stream: Any) -> Tuple[Any, Any]:
+def io_ports(midi_stream: Any) -> None:
     """Create input/output ports and add incoming messages to the stream."""
 
     def input_message(msg: Message) -> None:
@@ -141,9 +147,9 @@ def send_nrpn(msg) -> None:
     })
 
 
-def get_bank_message(mappings):
+def get_bank_message():
     """Get Midi message bank 1."""
-    bank_one = [m for m in mappings if (
+    bank_one = [m for m in store.get('mappings') if (
         m['o-type'] == 'bank_change' and
         m['o-control'] == '1')]
     if len(bank_one) > 0:

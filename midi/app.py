@@ -6,7 +6,6 @@ import time
 from rx.subject import Subject
 from rx import operators as ops
 
-from mappings import import_mappings
 from utils import (
     get_bank_message,
     io_ports,
@@ -20,18 +19,15 @@ from stream import (
     translate_and_send,
 )
 
-MAPPINGS_FOLDER = './mappings/'
-
 
 def main() -> None:
     """Main loop of the application."""
 
-    mappings = import_mappings(MAPPINGS_FOLDER)
-
     midi_stream = Subject()
     io_ports(midi_stream)
+
     midi_stream.pipe(
-        ops.map(lambda x: create_stream_data(x, mappings)),
+        ops.map(lambda x: create_stream_data(x)),
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
         ops.filter(lambda x: x['translations']),
@@ -41,7 +37,7 @@ def main() -> None:
     ).subscribe()
 
     # send bank 1 message to reset controller
-    reset_bank_message = get_bank_message(mappings)
+    reset_bank_message = get_bank_message()
     if reset_bank_message is not None:
         midi_stream.on_next(reset_bank_message)
 
