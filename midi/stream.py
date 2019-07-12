@@ -1,8 +1,8 @@
-"""Utility functions."""
+"""Functions used in the main appplication streams."""
 from typing import Any, Dict
 
 from utils import send_message
-from utils import store
+from store import store
 
 
 def create_stream_data(midi) -> Dict[str, Any]:
@@ -10,7 +10,6 @@ def create_stream_data(midi) -> Dict[str, Any]:
     return {
         'msg': {},
         'midi': midi,
-        'mappings': store.get('mappings'),
         'translations': [],
         'store': store,
     }
@@ -58,7 +57,8 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
                 int(mapping['bank']) == data['store'].get('active_bank'))
         )
 
-    data['translations'] = [m for m in data['mappings'] if check(m)]
+    mappings = data['store'].get('mappings')
+    data['translations'] = [mapping for mapping in mappings if check(mapping)]
     return data
 
 
@@ -84,7 +84,8 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
         Reset controls to their memory value.
         """
         midi = data['midi']
-        banks = [mapping['control'] for mapping in data['mappings'] if (
+        mappings = data['store'].get('mappings')
+        banks = [mapping['control'] for mapping in mappings if (
             mapping['o-type'] == 'bank_change')]
         for bank in banks:
             if midi.note != int(bank):
@@ -94,7 +95,8 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
                     'status': int(bank),
                 })
 
-        resets = [mapping for mapping in data['mappings'] if (
+        mappings = data['store'].get('mappings')
+        resets = [mapping for mapping in mappings if (
             int(mapping['bank']) == data['store'].get('active_bank'))]
         for reset in resets:
             send_message({

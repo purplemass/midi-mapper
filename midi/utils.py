@@ -2,35 +2,11 @@
 from typing import Any
 import sys
 
-from rx.subject import BehaviorSubject
-
 import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
-from mappings import import_mappings
-
-
-class Store(BehaviorSubject):
-    """Simple immutable store."""
-
-    def get(self, key: str) -> Any:
-        """Short method to get values from the store."""
-        return self.value[key]
-
-    def update(self, key: str, value: Any) -> None:
-        """Immutable way to update the store."""
-        if key in self.value:
-            self.on_next({**self.value, **dict({key: value})})
-
-
-store = Store({
-    'active_bank': None,
-    'active_programe': None,
-    'mappings': import_mappings(),
-    'inports': None,
-    'outports': None,
-})
+from store import store
 
 
 def io_ports(midi_stream: Any) -> None:
