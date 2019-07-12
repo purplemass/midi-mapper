@@ -20,7 +20,7 @@ class Store(BehaviorSubject):
 
 
 store = Store({
-    'active_bank': None,
+    'active_bank': 0,
     'active_programe': None,
     'mappings': import_mappings(),
     'inports': None,

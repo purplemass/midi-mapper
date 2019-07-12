@@ -1,7 +1,7 @@
 """Functions used in the main appplication streams."""
 from typing import Any, Dict
 
-from utils import send_message
+from utils import send_message, reset_banks_and_controls
 from store import store
 
 
@@ -78,11 +78,15 @@ def log(data: Dict[str, Any]) -> None:
 def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
     for translation in data['translations']:
-        translation['memory'] = data['msg']['level']
-        send_message({
-            'type': translation['o-type'],
-            'channel': int(translation['o-channel']) - 1,
-            'status': translation['o-control'],
-            'level': data['msg']['level'],
-        })
+        if translation['o-type'] == 'bank_change':
+            data['store'].update('active_bank', int(translation['o-control']))
+            reset_banks_and_controls(data)
+        else:
+            translation['memory'] = data['msg']['level']
+            send_message({
+                'type': translation['o-type'],
+                'channel': int(translation['o-channel']) - 1,
+                'status': translation['o-control'],
+                'level': data['msg']['level'],
+            })
     return data

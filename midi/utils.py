@@ -45,12 +45,6 @@ def send_message(msg) -> None:
 
 def send_midi(msg) -> None:
     """Send MIDI to output ports."""
-
-    # Handle our own special types first - don't send message
-    if msg['type'] == 'bank_change':
-        store.update('active_bank', int(msg['status']))
-        return
-    # Handle generic Midi types and send message
     if msg['type'] == 'control_change':
         midi = Message(
             type=msg['type'],
@@ -129,22 +123,21 @@ def send_nrpn(msg) -> None:
     })
 
 
-def reset_banks_and_controls(combined) -> None:
+def reset_banks_and_controls(data) -> None:
     """Turn all bank buttons off and turn on the active bank.
 
     Reset controls to their memory value.
     """
-    # new_bank = combined[0]
-    midi = combined[1]['midi']
     mappings = store.get('mappings')
-    banks = [mapping['control'] for mapping in mappings if (
+    bank_controls = [mapping['control'] for mapping in mappings if (
         mapping['o-type'] == 'bank_change')]
-    for bank in banks:
-        send_message({
-            'type': 'note_off',
-            'channel': midi.channel,
-            'status': midi.note,
-        })
+    for bank_control in bank_controls:
+        if int(bank_control) != data['msg']['status']:
+            send_message({
+                'type': 'note_off',
+                'channel': getattr(data['midi'], 'channel'),
+                'status': int(bank_control),
+            })
 
     resets = [mapping for mapping in mappings if (
         int(mapping['bank']) == store.get('active_bank'))]
@@ -157,21 +150,20 @@ def reset_banks_and_controls(combined) -> None:
         })
 
 
-def get_bank_message(select_bank):
-    """Get Midi message bank 1."""
-    bank_one = [m for m in store.get('mappings') if (
+def set_initial_bank(active_bank: int, midi_stream) -> None:
+    """Set  bank and reset controller."""
+    bank_controls = [m for m in store.get('mappings') if (
         m['o-type'] == 'bank_change' and
-        m['o-control'] == str(select_bank))]
-    if len(bank_one) > 0:
+        int(m['o-control']) == active_bank)]
+    for bank_control in bank_controls:
         send_message({
             'type': 'note_on',
-            'channel': int(bank_one[0]['channel']) - 1,
-            'status': int(bank_one[0]['control']),
+            'channel': int(bank_control['channel']) - 1,
+            'status': int(bank_control['control']),
         })
-        return Message(
+        midi_stream.on_next(Message(
             type='note_on',
-            channel=int(bank_one[0]['channel']) - 1,
-            note=int(bank_one[0]['control']),
+            channel=int(bank_control['channel']) - 1,
+            note=int(bank_control['control']),
             velocity=127,
-        )
-    return None
+        ))

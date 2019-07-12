@@ -13,11 +13,9 @@ from stream import (
     process_midi,
     translate_and_send,
 )
-from store import store
 from utils import (
-    get_bank_message,
+    set_initial_bank,
     io_ports,
-    reset_banks_and_controls,
 )
 
 
@@ -39,20 +37,8 @@ def main() -> None:
         ops.map(lambda x: translate_and_send(x)),
     ).subscribe()
 
-    store.pipe(
-        ops.map(lambda x: x.get('active_bank')),
-        ops.filter(lambda x: x is not None),
-        ops.with_latest_from(translated_stream.pipe(
-            ops.filter(
-                lambda x: x['translations'][0]['o-type'] == 'bank_change')
-        )),
-        ops.do_action(lambda x: reset_banks_and_controls(x)),
-    ).subscribe()
-
-    # send initial bank message to reset controller
-    reset_bank_message = get_bank_message(8)
-    if reset_bank_message is not None:
-        midi_stream.on_next(reset_bank_message)
+    # send initial bank to reset controller
+    set_initial_bank(8, midi_stream)
 
     while True:
         time.sleep(1)
