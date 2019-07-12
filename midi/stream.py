@@ -7,12 +7,11 @@ from utils import send_message
 active_bank = 1
 
 
-def create_stream_data(midi, mappings, outports) -> Dict[str, Any]:
+def create_stream_data(midi, mappings) -> Dict[str, Any]:
     return {
         'msg': {},
         'midi': midi,
         'mappings': mappings,
-        'outports': outports,
         'translations': [],
     }
 
@@ -95,7 +94,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
                     'type': 'note_off',
                     'channel': midi.channel,
                     'status': int(bank),
-                }, data['outports'])
+                })
 
         resets = [mapping for mapping in data['mappings'] if (
             int(mapping['bank']) == active_bank)]
@@ -105,7 +104,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
                 'channel': int(reset['channel']) - 1,
                 'status': int(reset['control']),
                 'level': int(reset['memory']),
-            }, data['outports'])
+            })
 
     for translation in data['translations']:
         if (int(translation['bank']) == 0 and
@@ -126,5 +125,5 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
             'channel': int(translation['o-channel']) - 1,
             'status': translation['o-control'],
             'level': data['msg']['level'],
-        }, data['outports'])
+        })
     return data

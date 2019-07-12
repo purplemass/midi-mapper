@@ -29,18 +29,19 @@ def main() -> None:
     mappings = import_mappings(MAPPINGS_FOLDER)
 
     midi_stream = Subject()
-    _, outports = io_ports(midi_stream)
+    io_ports(midi_stream)
     midi_stream.pipe(
-        ops.map(lambda x: create_stream_data(x, mappings, outports)),
+        ops.map(lambda x: create_stream_data(x, mappings)),
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
-        ops.map(lambda x: change_bank(x)),
+        ops.filter(lambda x: x['translations']),
         ops.do_action(lambda x: log(x)),
+        ops.map(lambda x: change_bank(x)),
         ops.map(lambda x: translate_and_send(x)),
     ).subscribe()
 
     # send bank 1 message to reset controller
-    reset_bank_message = get_bank_message(mappings, outports)
+    reset_bank_message = get_bank_message(mappings)
     if reset_bank_message is not None:
         midi_stream.on_next(reset_bank_message)
 

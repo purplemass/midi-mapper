@@ -2,9 +2,29 @@
 from typing import Any, Tuple
 import sys
 
+from rx.subject import BehaviorSubject
+
 import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
+
+
+store = BehaviorSubject({
+    'active_bank': None,
+    'active_programe': None,
+    'mappings': None,
+    'inports': None,
+    'outports': None,
+})
+
+
+def update(key, value):
+    """Immutable way to update the store."""
+    if key in store.value:
+        store.on_next({**store.value, **dict({key: value})})
+
+
+store.update = update
 
 
 def io_ports(midi_stream: Any) -> Tuple[Any, Any]:
@@ -29,18 +49,19 @@ def io_ports(midi_stream: Any) -> Tuple[Any, Any]:
             device, callback=input_message) for device in input_names])
     outports = MultiPort(
         [mido.open_output(device) for device in input_names])
-    return inports, outports
+    store.update('inports', inports)
+    store.update('outports', outports)
 
 
-def send_message(msg, outports) -> None:
+def send_message(msg) -> None:
     """Send MIDI or NRPN message to output ports."""
     if type(msg['status']) == str and len(msg['status'].split(':')) == 2:
-        send_nrpn(msg, outports)
+        send_nrpn(msg)
     else:
-        send_midi(msg, outports)
+        send_midi(msg)
 
 
-def send_midi(msg, outports) -> None:
+def send_midi(msg) -> None:
     """Send MIDI to output ports."""
     if msg['type'] == 'control_change':
         midi = Message(
@@ -80,10 +101,10 @@ def send_midi(msg, outports) -> None:
             pitch=msg['level'],
         )
 
-    outports.send(midi)
+    store.value['outports'].send(midi)
 
 
-def send_nrpn(msg, outports) -> None:
+def send_nrpn(msg) -> None:
     """Send NRPN message of the following format:
 
         MIDI # 16 CC 99 = control[0]
@@ -99,28 +120,28 @@ def send_nrpn(msg, outports) -> None:
         'channel': msg['channel'],
         'status': 99,
         'level': int(status[0]),
-    }, outports)
+    })
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
         'status': 98,
         'level': int(status[1]),
-    }, outports)
+    })
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
         'status': 6,
         'level': msg['level'],
-    }, outports)
+    })
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
         'status': 38,
         'level': 0,
-    }, outports)
+    })
 
 
-def get_bank_message(mappings, outports):
+def get_bank_message(mappings):
     """Get Midi message bank 1."""
     bank_one = [m for m in mappings if (
         m['o-type'] == 'bank_change' and
@@ -130,7 +151,7 @@ def get_bank_message(mappings, outports):
             'type': 'note_on',
             'channel': int(bank_one[0]['channel']) - 1,
             'status': int(bank_one[0]['control']),
-        }, outports)
+        })
         return Message(
             type='note_on',
             channel=int(bank_one[0]['channel']) - 1,
