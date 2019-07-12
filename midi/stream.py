@@ -21,28 +21,28 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
     """Process incoming message."""
     midi = data['midi']
     if midi.type == 'control_change':
-        control = midi.control
+        status = midi.control
         level = midi.value
     elif midi.type == 'note_off':
-        control = midi.note
+        status = midi.note
         level = midi.velocity
     elif midi.type == 'note_on':
-        control = midi.note
+        status = midi.note
         level = midi.velocity
     elif midi.type == 'program_change':
-        control = midi.program
+        status = midi.program
         level = None
     elif midi.type == 'aftertouch':
-        control = None
+        status = None
         level = midi.value
     elif midi.type == 'pitchwheel':
-        control = None
+        status = None
         level = midi.pitch
 
     data['msg'] = {
         'type': midi.type,
         'channel': midi.channel + 1,
-        'control': control,
+        'status': status,
         'level': level,
     }
     return data
@@ -55,7 +55,7 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
         return (
             mapping['type'] == data['msg']['type'] and
             int(mapping['channel']) == data['msg']['channel'] and
-            int(mapping['control']) == data['msg']['control'] and
+            int(mapping['control']) == data['msg']['status'] and
             (int(mapping['bank']) == 0 or
                 int(mapping['bank']) == active_bank)
         )
@@ -97,7 +97,7 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
             send_message({
                 'type': 'note_off',
                 'channel': midi.channel,
-                'control': int(bank),
+                'status': int(bank),
             }, outports)
 
         resets = [translate for translate in mappings if int(
@@ -106,14 +106,14 @@ def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
             send_message({
                 'type': 'control_change',
                 'channel': int(reset['channel']) - 1,
-                'control': int(reset['control']),
+                'status': int(reset['control']),
                 'level': int(reset['memory']),
             }, outports)
 
         send_message({
             'type': 'note_on',
             'channel': midi.channel,
-            'control': midi.note,
+            'status': midi.note,
         }, outports)
 
     for translate in data['translate']:
@@ -133,7 +133,7 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
         send_message({
             'type': translate['o-type'],
             'channel': int(translate['o-channel']) - 1,
-            'control': translate['o-control'],
+            'status': translate['o-control'],
             'level': data['msg']['level'],
         }, data['outports'])
     return data

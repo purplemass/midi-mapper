@@ -34,7 +34,7 @@ def io_ports(midi_stream: Any) -> Tuple[Any, Any]:
 
 def send_message(msg, outports) -> None:
     """Send MIDI or NRPN message to output ports."""
-    if type(msg['control']) == str and len(msg['control'].split(':')) == 2:
+    if type(msg['status']) == str and len(msg['status'].split(':')) == 2:
         send_nrpn(msg, outports)
     else:
         send_midi(msg, outports)
@@ -46,28 +46,28 @@ def send_midi(msg, outports) -> None:
         midi = Message(
             type=msg['type'],
             channel=msg['channel'],
-            control=int(msg['control']),
+            control=int(msg['status']),
             value=msg['level'],
         )
     elif msg['type'] == 'note_off':
         midi = Message(
             type=msg['type'],
             channel=msg['channel'],
-            note=int(msg['control']),
+            note=int(msg['status']),
             velocity=0,
         )
     elif msg['type'] == 'note_on':
         midi = Message(
             type=msg['type'],
             channel=msg['channel'],
-            note=int(msg['control']),
+            note=int(msg['status']),
             velocity=127,
         )
     elif msg['type'] == 'program_change':
         midi = Message(
             type=msg['type'],
             channel=msg['channel'],
-            program=int(msg['control']),
+            program=int(msg['status']),
         )
     elif msg['type'] == 'aftertouch':
         midi = Message(
@@ -93,29 +93,29 @@ def send_nrpn(msg, outports) -> None:
 
         Note that control is formatted like: '1:9'
     """
-    control = msg['control'].split(':')
+    status = msg['status'].split(':')
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
-        'control': 99,
-        'level': int(control[0]),
+        'status': 99,
+        'level': int(status[0]),
     }, outports)
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
-        'control': 98,
-        'level': int(control[1]),
+        'status': 98,
+        'level': int(status[1]),
     }, outports)
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
-        'control': 6,
+        'status': 6,
         'level': msg['level'],
     }, outports)
     send_midi({
         'type': msg['type'],
         'channel': msg['channel'],
-        'control': 38,
+        'status': 38,
         'level': 0,
     }, outports)
 
@@ -130,7 +130,7 @@ def get_bank_message(mappings):
         return Message(
             type='note_on',
             channel=int(bank_one[0]['channel']) - 1,
-            note=int(bank_one[0]['control']),
+            note=int(bank_one[0]['status']),
             velocity=127,
         )
     return None
