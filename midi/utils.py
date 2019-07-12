@@ -45,6 +45,12 @@ def send_message(msg) -> None:
 
 def send_midi(msg) -> None:
     """Send MIDI to output ports."""
+
+    # Handle our own special types first - don't send message
+    if msg['type'] == 'bank_change':
+        store.update('active_bank', int(msg['status']))
+        return
+    # Handle generic Midi types and send message
     if msg['type'] == 'control_change':
         midi = Message(
             type=msg['type'],
@@ -123,11 +129,39 @@ def send_nrpn(msg) -> None:
     })
 
 
-def get_bank_message():
+def reset_banks_and_controls(combined) -> None:
+    """Turn all bank buttons off and turn on the active bank.
+
+    Reset controls to their memory value.
+    """
+    # new_bank = combined[0]
+    midi = combined[1]['midi']
+    mappings = store.get('mappings')
+    banks = [mapping['control'] for mapping in mappings if (
+        mapping['o-type'] == 'bank_change')]
+    for bank in banks:
+        send_message({
+            'type': 'note_off',
+            'channel': midi.channel,
+            'status': midi.note,
+        })
+
+    resets = [mapping for mapping in mappings if (
+        int(mapping['bank']) == store.get('active_bank'))]
+    for reset in resets:
+        send_message({
+            'type': 'control_change',
+            'channel': int(reset['channel']) - 1,
+            'status': int(reset['control']),
+            'level': int(reset['memory']),
+        })
+
+
+def get_bank_message(select_bank):
     """Get Midi message bank 1."""
     bank_one = [m for m in store.get('mappings') if (
         m['o-type'] == 'bank_change' and
-        m['o-control'] == '1')]
+        m['o-control'] == str(select_bank))]
     if len(bank_one) > 0:
         send_message({
             'type': 'note_on',

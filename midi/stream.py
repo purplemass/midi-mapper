@@ -75,47 +75,6 @@ def log(data: Dict[str, Any]) -> None:
         ))
 
 
-def change_bank(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Check incoming bank_change messages."""
-
-    def reset_banks_and_controls() -> None:
-        """Turn all bank buttons off and turn on the active bank.
-
-        Reset controls to their memory value.
-        """
-        midi = data['midi']
-        mappings = data['store'].get('mappings')
-        banks = [mapping['control'] for mapping in mappings if (
-            mapping['o-type'] == 'bank_change')]
-        for bank in banks:
-            if midi.note != int(bank):
-                send_message({
-                    'type': 'note_off',
-                    'channel': midi.channel,
-                    'status': int(bank),
-                })
-
-        mappings = data['store'].get('mappings')
-        resets = [mapping for mapping in mappings if (
-            int(mapping['bank']) == data['store'].get('active_bank'))]
-        for reset in resets:
-            send_message({
-                'type': 'control_change',
-                'channel': int(reset['channel']) - 1,
-                'status': int(reset['control']),
-                'level': int(reset['memory']),
-            })
-
-    for translation in data['translations']:
-        if (int(translation['bank']) == 0 and
-                translation['o-type'] == 'bank_change'):
-            data['store'].update('active_bank', int(translation['o-control']))
-            reset_banks_and_controls()
-            data['translations'] = []
-            break
-    return data
-
-
 def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
     for translation in data['translations']:

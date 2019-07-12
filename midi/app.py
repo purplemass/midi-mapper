@@ -6,17 +6,18 @@ import time
 from rx.subject import Subject
 from rx import operators as ops
 
-from utils import (
-    get_bank_message,
-    io_ports,
-)
 from stream import (
-    change_bank,
     check_mappings,
     create_stream_data,
     log,
     process_midi,
     translate_and_send,
+)
+from store import store
+from utils import (
+    get_bank_message,
+    io_ports,
+    reset_banks_and_controls,
 )
 
 
@@ -26,18 +27,30 @@ def main() -> None:
     midi_stream = Subject()
     io_ports(midi_stream)
 
-    midi_stream.pipe(
+    translated_stream = midi_stream.pipe(
         ops.map(lambda x: create_stream_data(x)),
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
         ops.filter(lambda x: x['translations']),
+    )
+
+    translated_stream.pipe(
         ops.do_action(lambda x: log(x)),
-        ops.map(lambda x: change_bank(x)),
         ops.map(lambda x: translate_and_send(x)),
     ).subscribe()
 
-    # send bank 1 message to reset controller
-    reset_bank_message = get_bank_message()
+    store.pipe(
+        ops.map(lambda x: x.get('active_bank')),
+        ops.filter(lambda x: x is not None),
+        ops.with_latest_from(translated_stream.pipe(
+            ops.filter(
+                lambda x: x['translations'][0]['o-type'] == 'bank_change')
+        )),
+        ops.do_action(lambda x: reset_banks_and_controls(x)),
+    ).subscribe()
+
+    # send initial bank message to reset controller
+    reset_bank_message = get_bank_message(8)
     if reset_bank_message is not None:
         midi_stream.on_next(reset_bank_message)
 
