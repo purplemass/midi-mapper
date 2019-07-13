@@ -31,6 +31,8 @@ def io_ports(midi_stream: Any) -> None:
             device, callback=input_message) for device in input_names])
     outports = MultiPort(
         [mido.open_output(device) for device in input_names])
+    print('ports ready\n\tin: {}\n\tout: {}'.format(
+        len(inports.ports), len(outports.ports)))
     store.update('inports', inports)
     store.update('outports', outports)
 

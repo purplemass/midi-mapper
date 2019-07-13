@@ -1,6 +1,7 @@
 # app
 learn/
 logs/
+mappings/
 
 # dev
 .coverage
