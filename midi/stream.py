@@ -1,8 +1,8 @@
 """Functions used in the main appplication streams."""
 from typing import Any, Dict
 
-from utils import send_message, reset_banks_and_controls
-from store import store
+from .utils import send_message, reset_banks_and_controls
+from .store import store
 
 
 def create_stream_data(midi) -> Dict[str, Any]:

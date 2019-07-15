@@ -1,13 +1,14 @@
 SHELL := /bin/bash
 
 run:
-	clear; python3 midi/app.py
+	clear; python3 -m midi.app
 
 debug:
-	clear; python3 midi/app.py -v
+	clear; python3 -m midi.app -v
 
 test:
-	clear; mypy midi/ && pytest
+	clear; mypy -m midi; python -m pytest -s
+
 
 put:
 	scp main.py config.py pi@192.168.1.17:/home/pi/

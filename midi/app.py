@@ -6,20 +6,20 @@ import time
 from rx.subject import Subject
 from rx import operators as ops
 
-from stream import (
+from .stream import (
     check_mappings,
     create_stream_data,
     log,
     process_midi,
     translate_and_send,
 )
-from utils import (
+from .utils import (
     set_initial_bank,
     io_ports,
 )
 
 
-def main() -> None:
+def run() -> None:
     """Main loop of the application."""
 
     midi_stream = Subject()
@@ -45,7 +45,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    """Add keyboard interupt handler and run main."""
+    """Add keyboard interupt handler and run application."""
 
     def signal_handler(signal, frame) -> None:
         print('\033[H\033[J')
@@ -53,4 +53,4 @@ if __name__ == "__main__":
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
-    main()
+    run()

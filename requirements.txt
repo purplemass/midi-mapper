@@ -1,3 +1,4 @@
+ipdb==0.12
 mido==1.2.9
 mypy==0.711
 pytest==5.0.1

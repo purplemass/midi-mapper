@@ -6,7 +6,7 @@ import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
-from store import store
+from .store import store
 
 
 def io_ports(midi_stream: Any) -> None:

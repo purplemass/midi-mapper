@@ -3,7 +3,7 @@ from typing import Any
 
 from rx.subject import BehaviorSubject
 
-from mappings import import_mappings
+from .mappings import import_mappings
 
 
 class Store(BehaviorSubject):
