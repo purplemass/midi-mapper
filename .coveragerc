@@ -1,0 +1,9 @@
+[run]
+branch = False
+omit =
+    # omit untestable files
+    # midi_mapper/app.py
+
+[report]
+exclude_lines =
+    pragma: no cover

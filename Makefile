@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+COVERAGE_FAIL_UNDER = 50
 
 run:
 	clear; python3 -m midi_mapper.app
@@ -8,6 +9,12 @@ debug:
 
 test:
 	clear; mypy -m midi_mapper; python -m pytest -s
+
+test-cover:
+	clear; mypy -m midi_mapper; python -m pytest -s --cov=midi_mapper --cov-report term-missing --cov-fail-under=${COVERAGE_FAIL_UNDER}
+
+cover:
+	clear; coverage report -m ./midi_mapper/*.py
 
 
 put:
