@@ -18,6 +18,11 @@ def create_stream_data(midi) -> Dict[str, Any]:
 def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
     """Process incoming message."""
     midi = data['midi']
+    try:
+        channel = midi.channel + 1
+    except AttributeError:
+        channel = None
+
     if midi.type == 'control_change':
         status = midi.control
         level = midi.value
@@ -27,6 +32,9 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
     elif midi.type == 'note_on':
         status = midi.note
         level = midi.velocity
+    elif midi.type == 'polytouch':
+        status = midi.note
+        level = midi.value
     elif midi.type == 'program_change':
         status = midi.program
         level = None
@@ -36,9 +44,12 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
     elif midi.type == 'pitchwheel':
         status = None
         level = midi.pitch
+    else:
+        status = None
+        level = None
 
     data['msg'] = {
-        'channel': midi.channel + 1,
+        'channel': channel,
         'status': status,
         'level': level,
     }
