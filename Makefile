@@ -1,13 +1,13 @@
 SHELL := /bin/bash
 
 run:
-	clear; python3 -m midi.app
+	clear; python3 -m midi_mapper.app
 
 debug:
-	clear; python3 -m midi.app -v
+	clear; python3 -m midi_mapper.app -v
 
 test:
-	clear; mypy -m midi; python -m pytest -s
+	clear; mypy -m midi_mapper; python -m pytest -s
 
 
 put:

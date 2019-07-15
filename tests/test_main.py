@@ -2,7 +2,7 @@
 
 import pytest
 
-from midi.app import run
+from midi_mapper.app import run
 
 
 def f():
