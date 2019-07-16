@@ -39,57 +39,59 @@ def io_ports(midi_stream: Any) -> None:
 
 def send_message(msg) -> None:
     """Send MIDI or NRPN message to output ports."""
+    if store.get('outports') is None:
+        return
+
     if type(msg['status']) == str and len(msg['status'].split(':')) == 2:
-        send_nrpn(msg)
+        midi_notes = create_nrpn(msg)
+        for midi in midi_notes:
+            store.get('outports').send(midi)
     else:
-        send_midi(msg)
+        store.get('outports').send(create_midi(msg))
 
 
-def send_midi(msg) -> None:
+def create_midi(msg) -> None:
     """Send MIDI to output ports."""
     if msg['type'] == 'control_change':
-        midi = Message(
+        return Message(
             type=msg['type'],
             channel=msg['channel'],
             control=int(msg['status']),
             value=msg['level'],
         )
     elif msg['type'] == 'note_off':
-        midi = Message(
+        return Message(
             type=msg['type'],
             channel=msg['channel'],
             note=int(msg['status']),
             velocity=0,
         )
     elif msg['type'] == 'note_on':
-        midi = Message(
+        return Message(
             type=msg['type'],
             channel=msg['channel'],
             note=int(msg['status']),
             velocity=127,
         )
     elif msg['type'] == 'program_change':
-        midi = Message(
+        return Message(
             type=msg['type'],
             channel=msg['channel'],
             program=int(msg['status']),
         )
     elif msg['type'] == 'aftertouch':
-        midi = Message(
+        return Message(
             type=msg['type'],
             value=msg['level'],
         )
     elif msg['type'] == 'pitchwheel':
-        midi = Message(
+        return Message(
             type=msg['type'],
             pitch=msg['level'],
         )
 
-    if store.get('outports') is not None:
-        store.get('outports').send(midi)
 
-
-def send_nrpn(msg) -> None:
+def create_nrpn(msg) -> None:
     """Send NRPN message of the following format:
 
         MIDI # 16 CC 99 = control[0]
@@ -100,30 +102,32 @@ def send_nrpn(msg) -> None:
         Note that control is formatted like: '1:9'
     """
     status = msg['status'].split(':')
-    send_midi({
-        'type': msg['type'],
-        'channel': msg['channel'],
-        'status': 99,
-        'level': int(status[0]),
-    })
-    send_midi({
-        'type': msg['type'],
-        'channel': msg['channel'],
-        'status': 98,
-        'level': int(status[1]),
-    })
-    send_midi({
-        'type': msg['type'],
-        'channel': msg['channel'],
-        'status': 6,
-        'level': msg['level'],
-    })
-    send_midi({
-        'type': msg['type'],
-        'channel': msg['channel'],
-        'status': 38,
-        'level': 0,
-    })
+    return [
+        create_midi({
+            'type': msg['type'],
+            'channel': msg['channel'],
+            'status': 99,
+            'level': int(status[0]),
+        }),
+        create_midi({
+            'type': msg['type'],
+            'channel': msg['channel'],
+            'status': 98,
+            'level': int(status[1]),
+        }),
+        create_midi({
+            'type': msg['type'],
+            'channel': msg['channel'],
+            'status': 6,
+            'level': msg['level'],
+        }),
+        create_midi({
+            'type': msg['type'],
+            'channel': msg['channel'],
+            'status': 38,
+            'level': 0,
+        }),
+    ]
 
 
 def reset_banks_and_controls(data) -> None:
