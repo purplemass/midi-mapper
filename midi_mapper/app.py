@@ -24,10 +24,12 @@ from .utils import (
 def run() -> None:
     """Update store, create streams and run the main loop."""
 
-    store.update('mappings', import_mappings())
-
     midi_stream = Subject()
-    io_ports(midi_stream)
+
+    store.update('mappings', import_mappings())
+    store.update('midi_stream', midi_stream)
+
+    io_ports()
 
     translated_stream = midi_stream.pipe(
         ops.map(lambda x: create_stream_data(x)),

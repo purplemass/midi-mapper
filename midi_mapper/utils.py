@@ -1,5 +1,4 @@
 """Utility functions."""
-from typing import Any
 import sys
 
 import mido  # type: ignore
@@ -9,18 +8,18 @@ from mido import Message
 from .store import store
 
 
-def io_ports(midi_stream: Any) -> None:
-    """Create input/output ports and add incoming messages to the stream."""
+def input_message(midi: Message) -> None:
+    """Emit valid messages onto midi_stream."""
+    if midi.type in ['clock', 'start', 'stop']:
+        return
 
-    def input_message(msg: Message) -> None:
-        if (
-            msg.type != 'clock' and
-            msg.type != 'start' and
-            msg.type != 'stop'
-        ):
-            midi_stream.on_next(msg)
-            if '-v' in sys.argv:
-                print(f'\t\t\t\t\t\t\t\t -----> {msg}')
+    store.get('midi_stream').on_next(midi)
+    if '-v' in sys.argv:
+        print(f'\t\t\t\t\t\t\t\t -----> {midi}')
+
+
+def io_ports() -> None:
+    """Create input/output ports and add incoming messages to the stream."""
 
     input_names = mido.get_input_names()
     output_names = mido.get_output_names()

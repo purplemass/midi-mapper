@@ -23,4 +23,5 @@ store = Store({
     'mappings': [],
     'inports': None,
     'outports': None,
+    'midi_stream': None,
 })

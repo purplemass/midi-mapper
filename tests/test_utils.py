@@ -27,8 +27,8 @@ def no_io(monkeypatch):
 def test_io_ports(no_io):
     assert store.get('inports') is None
     assert store.get('outports') is None
-    midi_stream = Subject()
-    io_ports(midi_stream)
+    store.update('midi_stream', Subject())
+    io_ports()
     assert store.get('inports').ports == []
     assert store.get('outports').ports == []
 
