@@ -3,18 +3,6 @@ import pytest
 
 from mido import Message
 
-from midi_mapper import mappings
-
-
-@pytest.fixture(autouse=True)
-def no_mappings(monkeypatch):
-    """Do not import mappings for these tests."""
-
-    def import_mappings_mock():
-        return []
-
-    monkeypatch.setattr(mappings, 'import_mappings', import_mappings_mock)
-
 
 @pytest.fixture()
 def control_change():

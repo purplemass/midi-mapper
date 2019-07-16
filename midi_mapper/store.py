@@ -3,8 +3,6 @@ from typing import Any
 
 from rx.subject import BehaviorSubject
 
-from .mappings import import_mappings
-
 
 class Store(BehaviorSubject):
     """Simple immutable store."""
@@ -22,7 +20,7 @@ class Store(BehaviorSubject):
 store = Store({
     'active_bank': 0,
     'active_programe': None,
-    'mappings': import_mappings(),
+    'mappings': [],
     'inports': None,
     'outports': None,
 })

@@ -6,6 +6,8 @@ import time
 from rx.subject import Subject
 from rx import operators as ops
 
+from .mappings import import_mappings
+from .store import store
 from .stream import (
     check_mappings,
     create_stream_data,
@@ -20,7 +22,9 @@ from .utils import (
 
 
 def run() -> None:
-    """Main loop of the application."""
+    """Update store, create streams and run the main loop."""
+
+    store.update('mappings', import_mappings())
 
     midi_stream = Subject()
     io_ports(midi_stream)
