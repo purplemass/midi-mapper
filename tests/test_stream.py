@@ -1,8 +1,12 @@
 """Test functions related to the midi stream."""
+from mido import Message
 
+from midi_mapper.stream import check_mappings
 from midi_mapper.stream import create_stream_data
+from midi_mapper.stream import log
 from midi_mapper.stream import process_midi
 from midi_mapper.stream import store
+from midi_mapper.stream import translate_and_send
 
 
 def test_create_stream_data(midi_notes):
@@ -87,3 +91,124 @@ def test_process_real_time(real_time):
         'level': None,
     }
     partial_test_process_midi(ret, real_time)
+
+
+def test_check_mappings_bank0(mappings_bank0):
+    # Ensure mappings are set for these tests
+    store.update('mappings', mappings_bank0)
+    store.update('active_bank', 0)
+
+    midi = Message(type='note_off', channel=0, note=1, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    midi = Message(type='note_on', channel=15, note=1, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    midi = Message(type='note_on', channel=0, note=127, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    midi = Message(type='note_on', channel=0, note=11, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 1
+
+    midi = Message(type='control_change', channel=15, control=2, value=64)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    midi = Message(type='control_change', channel=0, control=127, value=64)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    midi = Message(type='control_change', channel=1, control=22, value=64)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 1
+
+    # bank0 mappings are not affected by setting the bank
+    store.update('active_bank', 1)
+
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 1
+
+
+def test_check_mappings_bank1(mappings_bank1):
+    # Ensure mappings are set for these tests
+    store.update('mappings', mappings_bank1)
+    store.update('active_bank', 0)
+
+    midi = Message(type='note_off', channel=0, note=1, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    midi = Message(type='note_on', channel=0, note=1, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 0
+
+    # change bank
+    store.update('active_bank', 1)
+
+    midi = Message(type='note_on', channel=2, note=33, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 1
+
+
+def test_check_log(mappings_bank1):
+    store.update('active_bank', 1)
+
+    midi = Message(type='note_on', channel=2, note=33, velocity=0)
+    ret = check_mappings(process_midi(create_stream_data(midi)))
+    assert len(ret['translations']) == 1
+    log(ret)
+
+
+def test_translate_and_send0(mappings_bank0):
+    store.update('mappings', mappings_bank0)
+    store.update('active_bank', 0)
+
+    midi = Message(type='note_on', channel=0, note=11, velocity=0)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    assert len(ret['translations']) == 1
+
+    store.update('active_bank', 1)
+
+    midi = Message(type='note_on', channel=0, note=11, velocity=0)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    assert len(ret['translations']) == 1
+
+
+def test_translate_and_send1(mappings_bank1):
+    store.update('mappings', mappings_bank1)
+    store.update('active_bank', 0)
+
+    midi = Message(type='note_on', channel=0, note=11, velocity=0)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    assert len(ret['translations']) == 0
+
+    store.update('active_bank', 1)
+
+    midi = Message(type='note_on', channel=2, note=33, velocity=0)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    assert len(ret['translations']) == 1
+
+
+def test_check_mappings_bank_set(mappings_bank_set):
+    store.update('mappings', mappings_bank_set)
+    store.update('active_bank', 0)
+
+    midi = Message(type='note_on', channel=15, note=1, velocity=0)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 0
+
+    midi = Message(type='note_on', channel=4, note=55, velocity=0)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 1
+
+    midi = Message(type='note_on', channel=5, note=66, velocity=0)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 2

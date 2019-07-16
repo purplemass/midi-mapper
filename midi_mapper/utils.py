@@ -85,7 +85,8 @@ def send_midi(msg) -> None:
             pitch=msg['level'],
         )
 
-    store.value['outports'].send(midi)
+    if store.get('outports') is not None:
+        store.get('outports').send(midi)
 
 
 def send_nrpn(msg) -> None:

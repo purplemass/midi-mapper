@@ -41,3 +41,102 @@ def pitchwheel():
     'clock', 'start', 'continue', 'stop', 'active_sensing', 'reset'])
 def real_time(request):
     return Message(type=request.param)
+
+
+@pytest.fixture()
+def mappings_bank0():
+    e1 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Button1'),
+        ('type', 'note_on'),
+        ('bank', '0'),
+        ('channel', '1'),
+        ('control', '11'),
+        ('=>', '=>'),
+        ('output-device', 'TestControllerOut'),
+        ('o-description', 'NoteOn Test'),
+        ('o-type', 'note_on'),
+        ('o-channel', '2'),
+        ('o-control', '12'),
+        ('memory', 0)])
+    e2 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Wheel 1'),
+        ('type', 'control_change'),
+        ('bank', '0'),
+        ('channel', '2'),
+        ('control', '22'),
+        ('=>', '=>'),
+        ('output-device', 'TestControllerOut'),
+        ('o-description', 'CC Test'),
+        ('o-type', 'control_change'),
+        ('o-channel', '3'),
+        ('o-control', '23'),
+        ('memory', 0)])
+    return [e1, e2]
+
+
+@pytest.fixture()
+def mappings_bank1():
+    e1 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Button1'),
+        ('type', 'note_on'),
+        ('bank', '1'),
+        ('channel', '3'),
+        ('control', '33'),
+        ('=>', '=>'),
+        ('output-device', 'TestControllerOut'),
+        ('o-description', 'NoteOn Test'),
+        ('o-type', 'note_on'),
+        ('o-channel', '4'),
+        ('o-control', '34'),
+        ('memory', 0)])
+    e2 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Wheel 1'),
+        ('type', 'control_change'),
+        ('bank', '1'),
+        ('channel', '4'),
+        ('control', '44'),
+        ('=>', '=>'),
+        ('output-device', 'TestControllerOut'),
+        ('o-description', 'CC Test'),
+        ('o-type', 'control_change'),
+        ('o-channel', '5'),
+        ('o-control', '45'),
+        ('memory', 0)])
+    return [e1, e2]
+
+
+@pytest.fixture()
+def mappings_bank_set():
+    e1 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Button1'),
+        ('type', 'note_on'),
+        ('bank', '0'),
+        ('channel', '5'),
+        ('control', '55'),
+        ('=>', '=>'),
+        ('output-device', 'Bank'),
+        ('o-description', 'Change bank 1'),
+        ('o-type', 'bank_change'),
+        ('o-channel', '-'),
+        ('o-control', '1'),
+        ('memory', 0)])
+    e2 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Button2'),
+        ('type', 'note_on'),
+        ('bank', '0'),
+        ('channel', '6'),
+        ('control', '66'),
+        ('=>', '=>'),
+        ('output-device', 'Bank'),
+        ('o-description', 'Change bank 2'),
+        ('o-type', 'bank_change'),
+        ('o-channel', '-'),
+        ('o-control', '2'),
+        ('memory', 0)])
+    return [e1, e2]
