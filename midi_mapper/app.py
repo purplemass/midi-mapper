@@ -8,17 +8,13 @@ from rx import operators as ops
 
 from .mappings import import_mappings
 from .store import store
-from .stream import (
-    check_mappings,
-    create_stream_data,
-    log,
-    process_midi,
-    translate_and_send,
-)
-from .utils import (
-    set_initial_bank,
-    io_ports,
-)
+from .stream import check_mappings
+from .stream import create_stream_data
+from .stream import log
+from .stream import process_midi
+from .stream import translate_and_send
+from .utils import set_initial_bank
+from .utils import io_ports
 
 
 def run() -> None:

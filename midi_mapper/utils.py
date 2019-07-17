@@ -5,14 +5,9 @@ import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
+from .constants import REAL_TIME_MESSAGES
+from .constants import SYSTEM_COMMON_MESSAGES
 from .store import store
-
-
-REAL_TIME_MESSAGES = [
-    'clock', 'start', 'continue', 'active_sensing', 'stop', 'reset']
-
-SYSTEM_COMMON_MESSAGES = [
-    'sysex', 'quarter_frame', 'songpos', 'song_select', 'tune_request']
 
 
 def input_message(midi: Message) -> None:
@@ -29,7 +24,6 @@ def input_message(midi: Message) -> None:
 
 def io_ports() -> None:
     """Create input/output ports and add incoming messages to the stream."""
-
     input_names = mido.get_input_names()
     output_names = mido.get_output_names()
     print(f'input_names: {input_names}')

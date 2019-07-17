@@ -1,8 +1,10 @@
 """Functions used in the main appplication streams."""
 from typing import Any, Dict
 
-from .utils import send_message, reset_banks_and_controls
+from .constants import STANDARD_MESSAGES
 from .store import store
+from .utils import reset_banks_and_controls
+from .utils import send_message
 
 
 def create_stream_data(midi) -> Dict[str, Any]:
@@ -22,32 +24,10 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
         channel = midi.channel + 1
     except AttributeError:
         channel = None
-
-    if midi.type == 'control_change':
-        status = midi.control
-        level = midi.value
-    elif midi.type == 'note_off':
-        status = midi.note
-        level = midi.velocity
-    elif midi.type == 'note_on':
-        status = midi.note
-        level = midi.velocity
-    elif midi.type == 'polytouch':
-        status = midi.note
-        level = midi.value
-    elif midi.type == 'program_change':
-        status = midi.program
-        level = None
-    elif midi.type == 'aftertouch':
-        status = None
-        level = midi.value
-    elif midi.type == 'pitchwheel':
-        status = None
-        level = midi.pitch
-    else:
-        status = None
-        level = None
-
+    try:
+        status, level = STANDARD_MESSAGES[midi.type](midi)
+    except KeyError:
+        status, level = None, None
     data['msg'] = {
         'channel': channel,
         'status': status,
