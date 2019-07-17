@@ -172,7 +172,7 @@ def reset_banks_and_controls(data) -> None:
         })
 
 
-def set_initial_bank(active_bank: int, midi_stream) -> None:
+def set_initial_bank(active_bank: int) -> None:
     """Set  bank and reset controller."""
     bank_controls = [m for m in store.get('mappings') if (
         m['o-type'] == 'bank_change' and
@@ -183,7 +183,7 @@ def set_initial_bank(active_bank: int, midi_stream) -> None:
             'channel': int(bank_control['channel']) - 1,
             'status': int(bank_control['control']),
         })
-        midi_stream.on_next(Message(
+        store.get('midi_stream').on_next(Message(
             type='note_on',
             channel=int(bank_control['channel']) - 1,
             note=int(bank_control['control']),

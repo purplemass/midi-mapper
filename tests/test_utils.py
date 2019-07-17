@@ -1,4 +1,4 @@
-"""Test functions related to the midi stream."""
+"""Test functions related to midi utils."""
 import pytest
 
 import mido
@@ -11,6 +11,13 @@ from midi_mapper.utils import create_nrpn
 from midi_mapper.utils import input_message
 from midi_mapper.utils import io_ports
 from midi_mapper.utils import send_message
+from midi_mapper.utils import set_initial_bank
+
+from midi_mapper.stream import check_mappings
+from midi_mapper.stream import create_stream_data
+from midi_mapper.stream import process_midi
+from midi_mapper.stream import translate_and_send
+
 from midi_mapper.store import store
 
 
@@ -155,3 +162,32 @@ def test_send_message():
         'level': '12:13',
     }
     send_message(msg)
+
+
+def test_set_initial_bank(mappings_bank_set):
+    store.update('mappings', mappings_bank_set)
+    store.update('active_bank', 0)
+    assert store.get('active_bank') == 0
+
+    result = []
+
+    def on_next(x):
+        result.append(x)
+
+    midi_stream = store.get('midi_stream')
+    midi_stream.subscribe(on_next=on_next)
+
+    assert result == []
+
+    set_initial_bank(0)
+    assert len(result) == 0
+    set_initial_bank(6)
+    assert len(result) == 0
+
+    set_initial_bank(1)
+    assert len(result) == 1
+    assert store.get('active_bank') == 0
+
+    midi = result[0]
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 1

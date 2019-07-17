@@ -1,4 +1,4 @@
-"""Test functions related to the midi stream."""
+"""Test functions related to mappings."""
 import os
 
 import pytest

@@ -44,7 +44,7 @@ def run() -> None:
     ).subscribe()
 
     # send initial bank to reset controller
-    set_initial_bank(8, midi_stream)
+    set_initial_bank(8)
 
     while True:
         time.sleep(1)

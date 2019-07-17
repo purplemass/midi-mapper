@@ -1,4 +1,4 @@
-"""Test functions related to the midi stream."""
+"""Test functions related to midi stream."""
 from mido import Message
 
 from midi_mapper.stream import check_mappings
