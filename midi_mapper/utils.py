@@ -153,6 +153,7 @@ def reset_banks_and_controls(data) -> None:
                 'type': 'note_off',
                 'channel': getattr(data['midi'], 'channel'),
                 'status': int(bank_control),
+                'level': 0,
             })
 
     resets = [mapping for mapping in mappings if (
@@ -176,6 +177,7 @@ def set_initial_bank(active_bank: int) -> None:
             'type': 'note_on',
             'channel': int(bank_control['channel']) - 1,
             'status': int(bank_control['control']),
+            'level': 127,
         })
         store.get('midi_stream').on_next(Message(
             type='note_on',

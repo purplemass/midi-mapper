@@ -158,8 +158,8 @@ def test_send_message():
     msg = {
         'type': 'program_change',
         'channel': 0,
-        'status': 1,
-        'level': '12:13',
+        'status': '12:13',
+        'level': 0,
     }
     send_message(msg)
 
