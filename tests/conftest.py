@@ -3,6 +3,8 @@ import pytest
 
 from mido import Message
 
+from midi_mapper.utils import REAL_TIME_MESSAGES
+
 
 @pytest.fixture()
 def control_change():
@@ -37,8 +39,7 @@ def pitchwheel():
     return Message(type='pitchwheel', pitch=64)
 
 
-@pytest.fixture(params=[
-    'clock', 'start', 'continue', 'stop', 'active_sensing', 'reset'])
+@pytest.fixture(params=REAL_TIME_MESSAGES)
 def real_time(request):
     return Message(type=request.param)
 

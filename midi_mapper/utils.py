@@ -8,13 +8,22 @@ from mido import Message
 from .store import store
 
 
+REAL_TIME_MESSAGES = [
+    'clock', 'start', 'continue', 'active_sensing', 'stop', 'reset']
+
+SYSTEM_COMMON_MESSAGES = [
+    'sysex', 'quarter_frame', 'songpos', 'song_select', 'tune_request']
+
+
 def input_message(midi: Message) -> None:
     """Emit valid messages onto midi_stream."""
-    if midi.type in ['clock', 'start', 'stop']:
+    if midi.type in SYSTEM_COMMON_MESSAGES:
+        return
+    if midi.type in REAL_TIME_MESSAGES:
         return
 
     store.get('midi_stream').on_next(midi)
-    if '-v' in sys.argv:
+    if '-v' in sys.argv:  # pragma: no cover
         print(f'\t\t\t\t\t\t\t\t -----> {midi}')
 
 
@@ -87,6 +96,13 @@ def create_midi(msg) -> None:
         return Message(
             type=msg['type'],
             pitch=msg['level'],
+        )
+    elif msg['type'] == 'polytouch':
+        return Message(
+            type=msg['type'],
+            channel=msg['channel'],
+            note=int(msg['status']),
+            value=msg['level'],
         )
 
 
