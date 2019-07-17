@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-COVERAGE_FAIL_UNDER = 60
+COVERAGE_FAIL_UNDER = 80
 
 run:
 	clear; python3 -m midi_mapper.app
