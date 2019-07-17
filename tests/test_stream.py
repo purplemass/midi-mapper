@@ -212,3 +212,58 @@ def test_check_mappings_bank_set(mappings_bank_set):
     midi = Message(type='note_on', channel=5, note=66, velocity=0)
     translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
     assert store.get('active_bank') == 2
+
+
+def test_check_memory(mappings_bank_set):
+    store.update('mappings', mappings_bank_set)
+    store.update('active_bank', 0)
+
+    bank1_element = 2
+    bank2_element = 3
+    assert store.get('mappings')[bank1_element]['memory'] == 0
+    assert store.get('mappings')[bank2_element]['memory'] == 0
+
+    # no bank selected the next messages should be ignored
+    midi = Message(type='control_change', channel=6, control=77, value=64)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    midi = Message(type='control_change', channel=7, control=88, value=89)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 0
+    assert store.get('mappings')[bank1_element]['memory'] == 0
+    assert store.get('mappings')[bank2_element]['memory'] == 0
+
+    # change to bank 1
+    midi = Message(type='note_on', channel=4, note=55, velocity=0)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 1
+    # bank1_element should change, bank2_element unchanged
+    midi = Message(type='control_change', channel=6, control=77, value=78)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    midi = Message(type='control_change', channel=7, control=88, value=89)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('mappings')[bank1_element]['memory'] == 78
+    assert store.get('mappings')[bank2_element]['memory'] == 0
+
+    # change to bank 2
+    midi = Message(type='note_on', channel=5, note=66, velocity=0)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 2
+    # bank2_element should change, bank1_element unchanged
+    midi = Message(type='control_change', channel=6, control=77, value=127)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    midi = Message(type='control_change', channel=7, control=88, value=89)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('mappings')[bank1_element]['memory'] == 78
+    assert store.get('mappings')[bank2_element]['memory'] == 89
+
+    # change to bank 1
+    midi = Message(type='note_on', channel=4, note=55, velocity=0)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('active_bank') == 1
+    # bank1_element should change, bank2_element unchanged
+    midi = Message(type='control_change', channel=6, control=77, value=127)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    midi = Message(type='control_change', channel=7, control=88, value=89)
+    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    assert store.get('mappings')[bank1_element]['memory'] == 127
+    assert store.get('mappings')[bank2_element]['memory'] == 89

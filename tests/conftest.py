@@ -140,4 +140,32 @@ def mappings_bank_set():
         ('o-channel', '-'),
         ('o-control', '2'),
         ('memory', 0)])
-    return [e1, e2]
+    e3 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Wheel 1'),
+        ('type', 'control_change'),
+        ('bank', '1'),
+        ('channel', '7'),
+        ('control', '77'),
+        ('=>', '=>'),
+        ('output-device', 'TestControllerOut'),
+        ('o-description', 'CC Test'),
+        ('o-type', 'control_change'),
+        ('o-channel', '8'),
+        ('o-control', '78'),
+        ('memory', 0)])
+    e4 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Wheel 1'),
+        ('type', 'control_change'),
+        ('bank', '2'),
+        ('channel', '8'),
+        ('control', '88'),
+        ('=>', '=>'),
+        ('output-device', 'TestControllerOut'),
+        ('o-description', 'CC Test'),
+        ('o-type', 'control_change'),
+        ('o-channel', '9'),
+        ('o-control', '89'),
+        ('memory', 0)])
+    return [e1, e2, e3, e4]
