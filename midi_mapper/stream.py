@@ -57,8 +57,9 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
 
 def log(data: Dict[str, Any]) -> None:
     """Log messages to console."""
+    formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
     for translation in data['translations']:
-        print('[{}] {}__{} => {}__{:<25} {}'.format(
+        print(formatter.format(
             data['store'].get('active_bank'),
             translation['input-device'],
             translation['description'],

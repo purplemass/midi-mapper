@@ -21,7 +21,7 @@ def input_message(midi: Message) -> None:
 
     store.get('midi_stream').on_next(midi)
     if '-v' in sys.argv:  # pragma: no cover
-        print(f'\t\t\t\t\t\t -----> {midi}')
+        print(f'[-] {midi}')
 
 
 def set_io_ports() -> None:
@@ -34,7 +34,7 @@ def set_io_ports() -> None:
         [mido.open_input(
             device, callback=input_message) for device in input_names])
     outports = MultiPort(
-        [mido.open_output(device) for device in input_names])
+        [mido.open_output(device) for device in output_names])
     print('ports ready\n\tin: {}\n\tout: {}'.format(
         len(inports.ports), len(outports.ports)))
     store.update('inports', inports)
