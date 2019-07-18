@@ -14,7 +14,6 @@ from midi_mapper.utils import send_message
 from midi_mapper.utils import set_initial_bank
 
 from midi_mapper.stream import check_mappings
-from midi_mapper.stream import create_stream_data
 from midi_mapper.stream import process_midi
 from midi_mapper.stream import translate_and_send
 
@@ -189,5 +188,5 @@ def test_set_initial_bank(mappings_bank_set):
     assert store.get('active_bank') == 0
 
     midi = result[0]
-    translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
+    translate_and_send(check_mappings(process_midi(midi)))
     assert store.get('active_bank') == 1

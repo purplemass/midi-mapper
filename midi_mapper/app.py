@@ -9,7 +9,6 @@ from rx import operators as ops
 from .mappings import import_mappings
 from .store import store
 from .stream import check_mappings
-from .stream import create_stream_data
 from .stream import log
 from .stream import process_midi
 from .stream import translate_and_send
@@ -38,7 +37,6 @@ def run() -> None:
     set_io_ports()
 
     translated_stream = midi_stream.pipe(
-        ops.map(lambda x: create_stream_data(x)),
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
         ops.filter(lambda x: x['translations']),

@@ -9,18 +9,8 @@ from .utils import reset_banks_and_controls
 from .utils import send_message
 
 
-def create_stream_data(midi: Message) -> Dict[str, Any]:
-    """Create stream data to be passed down."""
-    return {
-        'msg': {},
-        'midi': midi,
-        'translations': [],
-    }
-
-
-def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
+def process_midi(midi: Message) -> Dict[str, Any]:
     """Process incoming message."""
-    midi = data['midi']
     try:
         channel = midi.channel + 1
     except AttributeError:
@@ -29,12 +19,15 @@ def process_midi(data: Dict[str, Any]) -> Dict[str, Any]:
         status, level = STANDARD_MESSAGES[midi.type](midi)
     except KeyError:
         status, level = None, None
-    data['msg'] = {
-        'channel': channel,
-        'status': status,
-        'level': level,
+    return {
+        'msg': {
+            'type': midi.type,
+            'channel': channel,
+            'status': status,
+            'level': level,
+        },
+        'translations': [],
     }
-    return data
 
 
 def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -42,7 +35,7 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
 
     def check(mapping):
         return (
-            mapping['type'] == getattr(data['midi'], 'type') and
+            mapping['type'] == data['msg']['type'] and
             int(mapping['channel']) == data['msg']['channel'] and
             int(mapping['control']) == data['msg']['status'] and
             (int(mapping['bank']) == 0 or
