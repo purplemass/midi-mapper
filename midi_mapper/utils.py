@@ -141,20 +141,20 @@ def create_nrpn(msg: Dict[str, Any]) -> List[Message]:
     ]
 
 
-def reset_banks_and_controls(data: Dict[str, Any]) -> None:
+def reset_banks_and_controls() -> None:
     """Turn all bank buttons off and turn on the active bank.
 
     Reset controls to their memory value.
     """
     mappings = store.get('mappings')
-    bank_controls = [mapping['control'] for mapping in mappings if (
+    bank_controls = [mapping for mapping in mappings if (
         mapping['o-type'] == 'bank_change')]
     for bank_control in bank_controls:
-        if int(bank_control) != data['msg']['status']:
+        if int(bank_control['o-control']) != store.get('active_bank'):
             send_message({
                 'type': 'note_off',
-                'channel': getattr(data['midi'], 'channel'),
-                'status': int(bank_control),
+                'channel': int(bank_control['channel']) - 1,
+                'status': int(bank_control['control']),
                 'level': 0,
             })
 

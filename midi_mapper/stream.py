@@ -54,20 +54,6 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
-def log(data: Dict[str, Any]) -> None:
-    """Log messages to console."""
-    formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
-    for translation in data['translations']:
-        print(formatter.format(
-            store.get('active_bank'),
-            translation['input-device'],
-            translation['description'],
-            translation['output-device'],
-            translation['o-description'],
-            data['msg']['level'],
-        ))
-
-
 def calculate_range(range_: str, level: int) -> int:
     """Calculate range and apply to level."""
     if (range_ is not None and type(range_) == str and
@@ -83,7 +69,7 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     for translation in data['translations']:
         if translation['o-type'] == 'bank_change':
             store.update('active_bank', int(translation['o-control']))
-            reset_banks_and_controls(data)
+            reset_banks_and_controls()
         else:
             translation['memory'] = data['msg']['level']
             data['msg']['level'] = calculate_range(
@@ -95,3 +81,17 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
                 'level': data['msg']['level'],
             })
     return data
+
+
+def log(data: Dict[str, Any]) -> None:
+    """Log messages to console."""
+    formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
+    for translation in data['translations']:
+        print(formatter.format(
+            store.get('active_bank'),
+            translation['input-device'],
+            translation['description'],
+            translation['output-device'],
+            translation['o-description'],
+            data['msg']['level'],
+        ))
