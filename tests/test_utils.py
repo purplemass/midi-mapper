@@ -9,7 +9,7 @@ from rx.subject import Subject
 from midi_mapper.utils import create_midi
 from midi_mapper.utils import create_nrpn
 from midi_mapper.utils import input_message
-from midi_mapper.utils import io_ports
+from midi_mapper.utils import set_io_ports
 from midi_mapper.utils import send_message
 from midi_mapper.utils import set_initial_bank
 
@@ -32,11 +32,11 @@ def no_io(monkeypatch):
     monkeypatch.setattr(mido, 'get_output_names', get_io_names_mock)
 
 
-def test_io_ports(no_io):
+def test_set_io_ports(no_io):
     assert store.get('inports') is None
     assert store.get('outports') is None
     store.update('midi_stream', Subject())
-    io_ports()
+    set_io_ports()
     assert store.get('inports').ports == []
     assert store.get('outports').ports == []
 

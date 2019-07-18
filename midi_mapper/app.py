@@ -14,7 +14,7 @@ from .stream import log
 from .stream import process_midi
 from .stream import translate_and_send
 from .utils import set_initial_bank
-from .utils import io_ports
+from .utils import set_io_ports
 
 
 def signal_handler(signal, frame) -> None:
@@ -35,7 +35,7 @@ def run() -> None:
     store.update('mappings', import_mappings())
     store.update('midi_stream', midi_stream)
 
-    io_ports()
+    set_io_ports()
 
     translated_stream = midi_stream.pipe(
         ops.map(lambda x: create_stream_data(x)),

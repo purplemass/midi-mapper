@@ -24,7 +24,7 @@ def input_message(midi: Message) -> None:
         print(f'\t\t\t\t\t\t -----> {midi}')
 
 
-def io_ports() -> None:
+def set_io_ports() -> None:
     """Create input/output ports and add incoming messages to the stream."""
     input_names = mido.get_input_names()
     output_names = mido.get_output_names()
