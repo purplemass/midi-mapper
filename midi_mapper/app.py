@@ -17,6 +17,16 @@ from .utils import set_initial_bank
 from .utils import io_ports
 
 
+def signal_handler(signal, frame) -> None:
+    print('\033[H\033[J')
+    print('Keyboard interupt detected\n')
+    for port in store.get('inports').ports + store.get('outports').ports:
+        if port.closed is False:  # pragma: no cover
+            print(f'Closing {port}')
+            port.close()
+    sys.exit(0)
+
+
 def run() -> None:
     """Update store, create streams and run the main loop."""
 
@@ -46,17 +56,8 @@ def run() -> None:
         time.sleep(1)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     """Add keyboard interupt handler and run application."""
-
-    def signal_handler(signal, frame) -> None:
-        print('\033[H\033[J')
-        print('Keyboard interupt detected\n')
-        for port in store.get('inports').ports + store.get('outports').ports:
-            if port.closed is False:
-                print(f'Closing {port}')
-                port.close()
-        sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
     run()
