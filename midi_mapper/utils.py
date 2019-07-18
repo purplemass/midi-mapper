@@ -1,4 +1,6 @@
 """Utility functions."""
+from typing import Any, Dict, List
+
 import sys
 
 import mido  # type: ignore
@@ -39,7 +41,7 @@ def io_ports() -> None:
     store.update('outports', outports)
 
 
-def send_message(msg) -> None:
+def send_message(msg: Dict[str, Any]) -> None:
     """Send MIDI or NRPN message to output ports."""
     if store.get('outports') is None:
         return
@@ -52,7 +54,7 @@ def send_message(msg) -> None:
         store.get('outports').send(create_midi(msg))
 
 
-def create_midi(msg) -> None:
+def create_midi(msg: Dict[str, Any]) -> Message:
     """Send MIDI to output ports."""
     if msg['type'] == 'control_change':
         return Message(
@@ -100,7 +102,7 @@ def create_midi(msg) -> None:
         )
 
 
-def create_nrpn(msg) -> None:
+def create_nrpn(msg: Dict[str, Any]) -> List[Message]:
     """Send NRPN message of the following format:
 
         MIDI # 16 CC 99 = control[0]
@@ -139,7 +141,7 @@ def create_nrpn(msg) -> None:
     ]
 
 
-def reset_banks_and_controls(data) -> None:
+def reset_banks_and_controls(data: Dict[str, Any]) -> None:
     """Turn all bank buttons off and turn on the active bank.
 
     Reset controls to their memory value.

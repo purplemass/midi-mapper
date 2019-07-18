@@ -1,13 +1,15 @@
 """Functions used in the main appplication streams."""
 from typing import Any, Dict
 
+from mido import Message  # type: ignore
+
 from .constants import STANDARD_MESSAGES
 from .store import store
 from .utils import reset_banks_and_controls
 from .utils import send_message
 
 
-def create_stream_data(midi) -> Dict[str, Any]:
+def create_stream_data(midi: Message) -> Dict[str, Any]:
     """Create items in the steam to be passed down."""
     return {
         'msg': {},
@@ -66,7 +68,7 @@ def log(data: Dict[str, Any]) -> None:
         ))
 
 
-def calculate_range(range_, level):
+def calculate_range(range_: str, level: int) -> int:
     """Calculate range and apply to level."""
     if (range_ is not None and type(range_) == str and
             len(range_.split('-')) == 2):
