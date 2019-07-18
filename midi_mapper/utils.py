@@ -21,7 +21,7 @@ def input_message(midi: Message) -> None:
 
     store.get('midi_stream').on_next(midi)
     if '-v' in sys.argv:  # pragma: no cover
-        print(f'[-] {midi}')
+        print('{:35.35}> | {}'.format(100 * '=', midi))
 
 
 def set_io_ports() -> None:
@@ -55,7 +55,7 @@ def send_message(msg: Dict[str, Any]) -> None:
 
 
 def create_midi(msg: Dict[str, Any]) -> Message:
-    """Send MIDI to output ports."""
+    """Create MIDI message."""
     if msg['type'] == 'control_change':
         return Message(
             type=msg['type'],
@@ -103,7 +103,7 @@ def create_midi(msg: Dict[str, Any]) -> Message:
 
 
 def create_nrpn(msg: Dict[str, Any]) -> List[Message]:
-    """Send NRPN message of the following format:
+    """Create NRPN message of the following format:
 
         MIDI # 16 CC 99 = control[0]
         MIDI # 16 CC 98 = control[1]
@@ -147,19 +147,21 @@ def reset_banks_and_controls() -> None:
     Reset controls to their memory value.
     """
     mappings = store.get('mappings')
+    active_bank = store.get('active_bank')
+
     bank_controls = [mapping for mapping in mappings if (
-        mapping['o-type'] == 'bank_change')]
+        mapping['o-type'] == 'bank_change' and
+        int(mapping['o-control']) != active_bank)]
     for bank_control in bank_controls:
-        if int(bank_control['o-control']) != store.get('active_bank'):
-            send_message({
-                'type': 'note_off',
-                'channel': int(bank_control['channel']) - 1,
-                'status': int(bank_control['control']),
-                'level': 0,
-            })
+        send_message({
+            'type': 'note_off',
+            'channel': int(bank_control['channel']) - 1,
+            'status': int(bank_control['control']),
+            'level': 0,
+        })
 
     resets = [mapping for mapping in mappings if (
-        int(mapping['bank']) == store.get('active_bank'))]
+        int(mapping['bank']) == active_bank)]
     for reset in resets:
         send_message({
             'type': 'control_change',
@@ -170,10 +172,12 @@ def reset_banks_and_controls() -> None:
 
 
 def set_initial_bank(active_bank: int) -> None:
-    """Set  bank and reset controller."""
-    bank_controls = [m for m in store.get('mappings') if (
-        m['o-type'] == 'bank_change' and
-        int(m['o-control']) == active_bank)]
+    """Set bank and reset controller."""
+    mappings = store.get('mappings')
+
+    bank_controls = [mapping for mapping in mappings if (
+        mapping['o-type'] == 'bank_change' and
+        int(mapping['o-control']) == active_bank)]
     for bank_control in bank_controls:
         send_message({
             'type': 'note_on',
