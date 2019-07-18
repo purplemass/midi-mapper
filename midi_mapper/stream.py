@@ -66,6 +66,16 @@ def log(data: Dict[str, Any]) -> None:
         ))
 
 
+def calculate_range(range_, level):
+    """Calculate range and apply to level."""
+    if (range_ is not None and type(range_) == str and
+            len(range_.split('-')) == 2):
+        low, high = range_.split('-')
+        new_level = level * ((int(high) - int(low)) / 127) + int(low)
+        return int(new_level)
+    return level
+
+
 def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
     for translation in data['translations']:
@@ -74,6 +84,8 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
             reset_banks_and_controls(data)
         else:
             translation['memory'] = data['msg']['level']
+            data['msg']['level'] = calculate_range(
+                translation['o-range'], data['msg']['level'])
             send_message({
                 'type': translation['o-type'],
                 'channel': int(translation['o-channel']) - 1,

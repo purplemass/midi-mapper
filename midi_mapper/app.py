@@ -45,12 +45,12 @@ def run() -> None:
     )
 
     translated_stream.pipe(
-        ops.do_action(lambda x: log(x)),
         ops.map(lambda x: translate_and_send(x)),
+        ops.do_action(lambda x: log(x)),
     ).subscribe()
 
     # send initial bank to reset controller
-    set_initial_bank(8)
+    set_initial_bank(1)
 
     while True:
         time.sleep(1)

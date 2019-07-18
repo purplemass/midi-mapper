@@ -2,6 +2,7 @@
 from mido import Message
 
 from midi_mapper.stream import check_mappings
+from midi_mapper.stream import calculate_range
 from midi_mapper.stream import create_stream_data
 from midi_mapper.stream import log
 from midi_mapper.stream import process_midi
@@ -267,3 +268,27 @@ def test_check_memory(mappings_bank_set):
     translate_and_send(check_mappings(process_midi(create_stream_data(midi))))
     assert store.get('mappings')[bank1_element]['memory'] == 127
     assert store.get('mappings')[bank2_element]['memory'] == 89
+
+
+def test_calculate_range(mappings_bank_set):
+    store.update('mappings', mappings_bank_set)
+    store.update('active_bank', 1)
+
+    midi = Message(type='control_change', channel=6, control=77, value=17)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    expected = calculate_range(ret['translations'][0]['o-range'], 17)
+    assert ret['msg']['level'] == expected
+
+    midi = Message(type='control_change', channel=6, control=77, value=101)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    expected = calculate_range(ret['translations'][0]['o-range'], 101)
+    assert ret['msg']['level'] == expected
+
+    store.update('active_bank', 2)
+    midi = Message(type='control_change', channel=7, control=88, value=89)
+    ret = translate_and_send(
+        check_mappings(process_midi(create_stream_data(midi))))
+    expected = calculate_range(ret['translations'][0]['o-range'], 89)
+    assert ret['msg']['level'] == expected

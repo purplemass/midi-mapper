@@ -19,7 +19,7 @@ def input_message(midi: Message) -> None:
 
     store.get('midi_stream').on_next(midi)
     if '-v' in sys.argv:  # pragma: no cover
-        print(f'\t\t\t\t\t\t\t\t -----> {midi}')
+        print(f'\t\t\t\t\t\t -----> {midi}')
 
 
 def io_ports() -> None:

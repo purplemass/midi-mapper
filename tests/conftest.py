@@ -59,6 +59,7 @@ def mappings_bank0():
         ('o-type', 'note_on'),
         ('o-channel', '2'),
         ('o-control', '12'),
+        ('o-range', ''),
         ('memory', 0)])
     e2 = dict([
         ('input-device', 'TestControllerIn'),
@@ -73,6 +74,7 @@ def mappings_bank0():
         ('o-type', 'control_change'),
         ('o-channel', '3'),
         ('o-control', '23'),
+        ('o-range', ''),
         ('memory', 0)])
     return [e1, e2]
 
@@ -92,6 +94,7 @@ def mappings_bank1():
         ('o-type', 'note_on'),
         ('o-channel', '4'),
         ('o-control', '34'),
+        ('o-range', ''),
         ('memory', 0)])
     e2 = dict([
         ('input-device', 'TestControllerIn'),
@@ -106,6 +109,7 @@ def mappings_bank1():
         ('o-type', 'control_change'),
         ('o-channel', '5'),
         ('o-control', '45'),
+        ('o-range', ''),
         ('memory', 0)])
     return [e1, e2]
 
@@ -125,6 +129,7 @@ def mappings_bank_set():
         ('o-type', 'bank_change'),
         ('o-channel', '-'),
         ('o-control', '1'),
+        ('o-range', ''),
         ('memory', 0)])
     e2 = dict([
         ('input-device', 'TestControllerIn'),
@@ -139,6 +144,7 @@ def mappings_bank_set():
         ('o-type', 'bank_change'),
         ('o-channel', '-'),
         ('o-control', '2'),
+        ('o-range', ''),
         ('memory', 0)])
     e3 = dict([
         ('input-device', 'TestControllerIn'),
@@ -153,6 +159,7 @@ def mappings_bank_set():
         ('o-type', 'control_change'),
         ('o-channel', '8'),
         ('o-control', '78'),
+        ('o-range', '0-16'),
         ('memory', 0)])
     e4 = dict([
         ('input-device', 'TestControllerIn'),
@@ -167,5 +174,6 @@ def mappings_bank_set():
         ('o-type', 'control_change'),
         ('o-channel', '9'),
         ('o-control', '89'),
+        ('o-range', '100-110'),
         ('memory', 0)])
     return [e1, e2, e3, e4]
