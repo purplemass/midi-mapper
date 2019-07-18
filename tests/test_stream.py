@@ -15,13 +15,11 @@ def test_create_stream_data(midi_notes):
     assert stream_data['msg'] == dict()
     assert stream_data['midi'] == midi_notes
     assert stream_data['translations'] == []
-    assert stream_data['store'] == store
 
 
 def partial_test_process_midi(data, midi):
     assert data['midi'] == midi
     assert data['translations'] == []
-    assert data['store'] == store
 
 
 def test_process_midi_notes(midi_notes):

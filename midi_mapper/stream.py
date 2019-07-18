@@ -10,12 +10,11 @@ from .utils import send_message
 
 
 def create_stream_data(midi: Message) -> Dict[str, Any]:
-    """Create items in the steam to be passed down."""
+    """Create stream data to be passed down."""
     return {
         'msg': {},
         'midi': midi,
         'translations': [],
-        'store': store,
     }
 
 
@@ -47,10 +46,10 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
             int(mapping['channel']) == data['msg']['channel'] and
             int(mapping['control']) == data['msg']['status'] and
             (int(mapping['bank']) == 0 or
-                int(mapping['bank']) == data['store'].get('active_bank'))
+                int(mapping['bank']) == store.get('active_bank'))
         )
 
-    mappings = data['store'].get('mappings')
+    mappings = store.get('mappings')
     data['translations'] = [mapping for mapping in mappings if check(mapping)]
     return data
 
@@ -60,7 +59,7 @@ def log(data: Dict[str, Any]) -> None:
     formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
     for translation in data['translations']:
         print(formatter.format(
-            data['store'].get('active_bank'),
+            store.get('active_bank'),
             translation['input-device'],
             translation['description'],
             translation['output-device'],
@@ -83,7 +82,7 @@ def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
     for translation in data['translations']:
         if translation['o-type'] == 'bank_change':
-            data['store'].update('active_bank', int(translation['o-control']))
+            store.update('active_bank', int(translation['o-control']))
             reset_banks_and_controls(data)
         else:
             translation['memory'] = data['msg']['level']
