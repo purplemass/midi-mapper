@@ -44,8 +44,7 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
         )
 
     mappings = store.get('mappings')
-    data['translations'] = [set_memory(m) for m in mappings if check(m)]
-    return data
+    return [set_memory(m) for m in mappings if check(m)]
 
 
 def calculate_range(range_: str, level: int) -> int:

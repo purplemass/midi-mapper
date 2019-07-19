@@ -13,10 +13,6 @@ from midi_mapper.utils import set_io_ports
 from midi_mapper.utils import send_message
 from midi_mapper.utils import set_bank
 
-from midi_mapper.stream import check_mappings
-from midi_mapper.stream import process_midi
-from midi_mapper.stream import translate_and_send
-
 from midi_mapper.store import store
 
 

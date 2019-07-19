@@ -39,7 +39,7 @@ def run() -> None:
     translated_stream = midi_stream.pipe(
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
-        ops.flat_map(lambda x: x['translations']),
+        ops.flat_map(lambda x: x),
     )
 
     translated_stream.pipe(
