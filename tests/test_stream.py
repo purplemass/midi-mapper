@@ -5,6 +5,7 @@ from midi_mapper.stream import get_translations
 from midi_mapper.stream import calculate_range
 from midi_mapper.stream import log
 from midi_mapper.stream import process_midi
+from midi_mapper.stream import set_bank
 from midi_mapper.stream import store
 from midi_mapper.stream import translate_and_send
 
@@ -293,3 +294,24 @@ def test_calculate_range(mappings_bank_set):
     ret = send_midi_through_the_stream(midi)
     expected = calculate_range(ret['o-range'], 89)
     assert ret['o-level'] == expected
+
+
+def test_set_bank(mappings_bank_set):
+    store.update('mappings', mappings_bank_set)
+    store.update('active_bank', 0)
+    assert store.get('active_bank') == 0
+
+    set_bank(6)
+    assert store.get('active_bank') == 0
+    set_bank(12)
+    assert store.get('active_bank') == 0
+    set_bank(121)
+    assert store.get('active_bank') == 0
+
+    set_bank(1)
+    assert store.get('active_bank') == 1
+    set_bank(2)
+    assert store.get('active_bank') == 2
+
+    set_bank(1, initial=True)
+    assert store.get('active_bank') == 1

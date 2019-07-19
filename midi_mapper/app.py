@@ -12,7 +12,7 @@ from .stream import get_translations
 from .stream import log
 from .stream import process_midi
 from .stream import translate_and_send
-from .utils import set_bank
+from .stream import set_bank
 from .utils import set_io_ports
 
 
@@ -36,13 +36,13 @@ def run() -> None:
 
     set_io_ports()
 
-    translated_stream = midi_stream.pipe(
+    translations_stream = midi_stream.pipe(
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: get_translations(x)),
         ops.flat_map(lambda x: x),
     )
 
-    translated_stream.pipe(
+    translations_stream.pipe(
         ops.map(lambda x: translate_and_send(x)),
         ops.do_action(lambda x: log(x)),
     ).subscribe(on_error=lambda x: print(f'ERROR: {x}'))

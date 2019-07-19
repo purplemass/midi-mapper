@@ -6,14 +6,12 @@ from mido import Message
 
 from rx.subject import Subject
 
+from midi_mapper.store import store
 from midi_mapper.utils import create_midi
 from midi_mapper.utils import create_nrpn
 from midi_mapper.utils import input_message
 from midi_mapper.utils import set_io_ports
 from midi_mapper.utils import send_message
-from midi_mapper.utils import set_bank
-
-from midi_mapper.store import store
 
 
 @pytest.fixture()
@@ -157,24 +155,3 @@ def test_send_message():
         'level': 0,
     }
     send_message(msg)
-
-
-def test_set_bank(mappings_bank_set):
-    store.update('mappings', mappings_bank_set)
-    store.update('active_bank', 0)
-    assert store.get('active_bank') == 0
-
-    set_bank(6)
-    assert store.get('active_bank') == 0
-    set_bank(12)
-    assert store.get('active_bank') == 0
-    set_bank(121)
-    assert store.get('active_bank') == 0
-
-    set_bank(1)
-    assert store.get('active_bank') == 1
-    set_bank(2)
-    assert store.get('active_bank') == 2
-
-    set_bank(1, initial=True)
-    assert store.get('active_bank') == 1

@@ -5,7 +5,6 @@ from mido import Message  # type: ignore
 
 from .constants import STANDARD_MESSAGES
 from .store import store
-from .utils import set_bank
 from .utils import send_message
 
 
@@ -73,6 +72,38 @@ def translate_and_send(translation: Dict[str, Any]) -> Dict[str, Any]:
         })
     translation['o-level'] = level
     return translation
+
+
+def set_bank(active_bank: int, initial=False) -> None:
+    """Set active bank, turn all bank buttons off and turn on the active bank.
+
+    Reset controls to their memory value.
+    """
+    mappings = store.get('mappings')
+    controls = [m for m in mappings if m['o-type'] == 'bank_change']
+    # Check if passed bank is valid
+    if not [c for c in controls if (int(c['o-control']) == active_bank)]:
+        return
+
+    store.update('active_bank', active_bank)
+
+    for control in controls:
+        channel, status = int(control['channel']) - 1, int(control['control'])
+        if int(control['o-control']) != active_bank:
+            send_message({'type': 'note_off', 'channel': channel,
+                          'status': status, 'level': 0})
+        elif initial:
+            send_message({'type': 'note_on', 'channel': channel,
+                          'status': status, 'level': 127})
+
+    resets = [m for m in mappings if int(m['bank']) == active_bank]
+    for reset in resets:
+        send_message({
+            'type': 'control_change',
+            'channel': int(reset['channel']) - 1,
+            'status': int(reset['control']),
+            'level': int(reset['memory']),
+        })
 
 
 def log(translation: Dict[str, Any]) -> None:
