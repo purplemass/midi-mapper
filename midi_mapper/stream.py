@@ -20,13 +20,10 @@ def process_midi(midi: Message) -> Dict[str, Any]:
     except KeyError:
         status, level = None, None
     return {
-        'msg': {
-            'type': midi.type,
-            'channel': channel,
-            'status': status,
-            'level': level,
-        },
-        'translations': [],
+        'type': midi.type,
+        'channel': channel,
+        'status': status,
+        'level': level,
     }
 
 
@@ -34,14 +31,14 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
     """Check incoming message for matches in mappings."""
 
     def set_memory(mapping):
-        mapping['memory'] = data['msg']['level']
+        mapping['memory'] = data['level']
         return mapping
 
     def check(mapping):
         return (
-            mapping['type'] == data['msg']['type'] and
-            int(mapping['channel']) == data['msg']['channel'] and
-            int(mapping['control']) == data['msg']['status'] and
+            mapping['type'] == data['type'] and
+            int(mapping['channel']) == data['channel'] and
+            int(mapping['control']) == data['status'] and
             (int(mapping['bank']) == 0 or
                 int(mapping['bank']) == store.get('active_bank'))
         )

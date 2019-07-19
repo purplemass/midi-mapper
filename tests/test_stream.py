@@ -11,79 +11,72 @@ from midi_mapper.stream import translate_and_send
 
 def test_process_midi_notes(midi_notes):
     ret = process_midi(midi_notes)
-    assert ret['msg'] == {
+    assert ret == {
         'type': midi_notes.type,
         'channel': midi_notes.channel + 1,
         'status': midi_notes.note,
         'level': midi_notes.velocity,
     }
-    assert ret['translations'] == []
 
 
 def test_process_polytouch(polytouch):
     ret = process_midi(polytouch)
-    assert ret['msg'] == {
+    assert ret == {
         'type': polytouch.type,
         'channel': polytouch.channel + 1,
         'status': polytouch.note,
         'level': polytouch.value,
     }
-    assert ret['translations'] == []
 
 
 def test_process_control_change(control_change):
     ret = process_midi(control_change)
-    assert ret['msg'] == {
+    assert ret == {
         'type': control_change.type,
         'channel': control_change.channel + 1,
         'status': control_change.control,
         'level': control_change.value,
     }
-    assert ret['translations'] == []
 
 
 def test_process_program_change(program_change):
     ret = process_midi(program_change)
-    assert ret['msg'] == {
+    assert ret == {
         'type': program_change.type,
         'channel': program_change.channel + 1,
         'status': program_change.program,
         'level': None,
     }
-    assert ret['translations'] == []
 
 
 def test_process_aftertouch(aftertouch):
     ret = process_midi(aftertouch)
-    assert ret['msg'] == {
+    assert ret == {
         'type': aftertouch.type,
         'channel': aftertouch.channel + 1,
         'status': None,
         'level': aftertouch.value,
     }
-    assert ret['translations'] == []
 
 
 def test_process_pitchwheel(pitchwheel):
     ret = process_midi(pitchwheel)
-    assert ret['msg'] == {
+    assert ret == {
         'type': pitchwheel.type,
         'channel': pitchwheel.channel + 1,
         'status': None,
         'level': pitchwheel.pitch,
     }
-    assert ret['translations'] == []
 
 
 def test_process_real_time(real_time):
     ret = process_midi(real_time)
-    assert ret['msg'] == {
+    assert ret == {
         'type': real_time.type,
         'channel': None,
         'status': None,
         'level': None,
     }
-    assert ret['translations'] == []
 
 
 def test_check_mappings_bank0(mappings_bank0):
