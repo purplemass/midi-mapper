@@ -11,7 +11,7 @@ from midi_mapper.utils import create_nrpn
 from midi_mapper.utils import input_message
 from midi_mapper.utils import set_io_ports
 from midi_mapper.utils import send_message
-from midi_mapper.utils import set_initial_bank
+from midi_mapper.utils import set_bank
 
 from midi_mapper.stream import check_mappings
 from midi_mapper.stream import process_midi
@@ -163,32 +163,22 @@ def test_send_message():
     send_message(msg)
 
 
-def test_set_initial_bank(mappings_bank_set):
+def test_set_bank(mappings_bank_set):
     store.update('mappings', mappings_bank_set)
     store.update('active_bank', 0)
     assert store.get('active_bank') == 0
 
-    result = []
-
-    def on_next(x):
-        result.append(x)
-
-    midi_stream = store.get('midi_stream')
-    midi_stream.subscribe(on_next=on_next)
-
-    assert result == []
-
-    set_initial_bank(0)
-    assert len(result) == 0
-    set_initial_bank(6)
-    assert len(result) == 0
-
-    set_initial_bank(1)
-    assert len(result) == 1
+    set_bank(6)
+    assert store.get('active_bank') == 0
+    set_bank(12)
+    assert store.get('active_bank') == 0
+    set_bank(121)
     assert store.get('active_bank') == 0
 
-    midi = result[0]
-    ret = check_mappings(process_midi(midi))
-    assert len(ret['translations']) == 1
-    translate_and_send(ret['translations'][0])
+    set_bank(1)
+    assert store.get('active_bank') == 1
+    set_bank(2)
+    assert store.get('active_bank') == 2
+
+    set_bank(1, initial=True)
     assert store.get('active_bank') == 1

@@ -5,7 +5,7 @@ from mido import Message  # type: ignore
 
 from .constants import STANDARD_MESSAGES
 from .store import store
-from .utils import reset_banks_and_controls
+from .utils import set_bank
 from .utils import send_message
 
 
@@ -66,8 +66,7 @@ def translate_and_send(translation: Dict[str, Any]) -> Dict[str, Any]:
     level = translation['memory']
 
     if translation['o-type'] == 'bank_change':
-        store.update('active_bank', int(translation['o-control']))
-        reset_banks_and_controls()
+        set_bank(int(translation['o-control']))
     else:
         level = calculate_range(translation['o-range'], level)
         send_message({

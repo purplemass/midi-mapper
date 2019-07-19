@@ -12,7 +12,7 @@ from .stream import check_mappings
 from .stream import log
 from .stream import process_midi
 from .stream import translate_and_send
-from .utils import set_initial_bank
+from .utils import set_bank
 from .utils import set_io_ports
 
 
@@ -48,7 +48,7 @@ def run() -> None:
     ).subscribe(on_error=lambda x: print(f'ERROR: {x}'))
 
     # send initial bank to reset controller
-    set_initial_bank(1)
+    set_bank(1, initial=True)
 
     while True:
         time.sleep(1)

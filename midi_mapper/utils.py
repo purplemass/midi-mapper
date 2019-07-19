@@ -141,24 +141,36 @@ def create_nrpn(msg: Dict[str, Any]) -> List[Message]:
     ]
 
 
-def reset_banks_and_controls() -> None:
+def set_bank(active_bank: int, initial=False) -> None:
     """Turn all bank buttons off and turn on the active bank.
 
     Reset controls to their memory value.
     """
     mappings = store.get('mappings')
-    active_bank = store.get('active_bank')
 
     bank_controls = [mapping for mapping in mappings if (
-        mapping['o-type'] == 'bank_change' and
-        int(mapping['o-control']) != active_bank)]
+        mapping['o-type'] == 'bank_change')]
+    allowed = [
+        m for m in bank_controls if (int(m['o-control']) == active_bank)]
+
+    if allowed:
+        store.update('active_bank', active_bank)
+
     for bank_control in bank_controls:
-        send_message({
-            'type': 'note_off',
-            'channel': int(bank_control['channel']) - 1,
-            'status': int(bank_control['control']),
-            'level': 0,
-        })
+        if int(bank_control['o-control']) != active_bank:
+            send_message({
+                'type': 'note_off',
+                'channel': int(bank_control['channel']) - 1,
+                'status': int(bank_control['control']),
+                'level': 0,
+            })
+        elif initial:
+            send_message({
+                'type': 'note_on',
+                'channel': int(bank_control['channel']) - 1,
+                'status': int(bank_control['control']),
+                'level': 127,
+            })
 
     resets = [mapping for mapping in mappings if (
         int(mapping['bank']) == active_bank)]
@@ -169,25 +181,3 @@ def reset_banks_and_controls() -> None:
             'status': int(reset['control']),
             'level': int(reset['memory']),
         })
-
-
-def set_initial_bank(active_bank: int) -> None:
-    """Set bank and reset controller."""
-    mappings = store.get('mappings')
-
-    bank_controls = [mapping for mapping in mappings if (
-        mapping['o-type'] == 'bank_change' and
-        int(mapping['o-control']) == active_bank)]
-    for bank_control in bank_controls:
-        send_message({
-            'type': 'note_on',
-            'channel': int(bank_control['channel']) - 1,
-            'status': int(bank_control['control']),
-            'level': 127,
-        })
-        store.get('midi_stream').on_next(Message(
-            type='note_on',
-            channel=int(bank_control['channel']) - 1,
-            note=int(bank_control['control']),
-            velocity=127,
-        ))
