@@ -1,7 +1,7 @@
 """Test functions related to midi stream."""
 from mido import Message
 
-from midi_mapper.stream import check_mappings
+from midi_mapper.stream import get_translations
 from midi_mapper.stream import calculate_range
 from midi_mapper.stream import log
 from midi_mapper.stream import process_midi
@@ -79,64 +79,64 @@ def test_process_real_time(real_time):
     }
 
 
-def test_check_mappings_bank0(mappings_bank0):
+def test_get_translations_bank0(mappings_bank0):
     # Ensure mappings are set for these tests
     store.update('mappings', mappings_bank0)
     store.update('active_bank', 0)
 
     midi = Message(type='note_off', channel=0, note=1, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     midi = Message(type='note_on', channel=15, note=1, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     midi = Message(type='note_on', channel=0, note=127, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
     midi = Message(type='control_change', channel=15, control=2, value=64)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     midi = Message(type='control_change', channel=0, control=127, value=64)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     midi = Message(type='control_change', channel=1, control=22, value=64)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
     # bank0 mappings are not affected by setting the bank
     store.update('active_bank', 1)
 
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
 
-def test_check_mappings_bank1(mappings_bank1):
+def test_get_translations_bank1(mappings_bank1):
     # Ensure mappings are set for these tests
     store.update('mappings', mappings_bank1)
     store.update('active_bank', 0)
 
     midi = Message(type='note_off', channel=0, note=1, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     midi = Message(type='note_on', channel=0, note=1, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     # change bank
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=2, note=33, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
 
@@ -145,7 +145,7 @@ def test_check_log(mappings_bank1):
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=2, note=33, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
     log(translate_and_send(ret[0]))
 
@@ -155,7 +155,7 @@ def test_translate_and_send0(mappings_bank0):
     store.update('active_bank', 0)
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
     ret = translate_and_send(ret[0])
@@ -166,7 +166,7 @@ def test_translate_and_send0(mappings_bank0):
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
     ret = translate_and_send(ret[0])
@@ -180,13 +180,13 @@ def test_translate_and_send1(mappings_bank1):
     store.update('active_bank', 0)
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 0
 
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=2, note=33, velocity=0)
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     assert len(ret) == 1
 
     ret = translate_and_send(ret[0])
@@ -196,13 +196,13 @@ def test_translate_and_send1(mappings_bank1):
 
 
 def send_midi_through_the_stream(midi):
-    ret = check_mappings(process_midi(midi))
+    ret = get_translations(process_midi(midi))
     if ret:
         return translate_and_send(ret[0])
     return None
 
 
-def test_check_mappings_bank_set(mappings_bank_set):
+def test_get_translations_bank_set(mappings_bank_set):
     store.update('mappings', mappings_bank_set)
     store.update('active_bank', 0)
 

@@ -8,7 +8,7 @@ from rx import operators as ops
 
 from .mappings import import_mappings
 from .store import store
-from .stream import check_mappings
+from .stream import get_translations
 from .stream import log
 from .stream import process_midi
 from .stream import translate_and_send
@@ -38,7 +38,7 @@ def run() -> None:
 
     translated_stream = midi_stream.pipe(
         ops.map(lambda x: process_midi(x)),
-        ops.map(lambda x: check_mappings(x)),
+        ops.map(lambda x: get_translations(x)),
         ops.flat_map(lambda x: x),
     )
 

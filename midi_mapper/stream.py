@@ -1,5 +1,5 @@
 """Functions used in the main appplication streams."""
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from mido import Message  # type: ignore
 
@@ -27,7 +27,7 @@ def process_midi(midi: Message) -> Dict[str, Any]:
     }
 
 
-def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
+def get_translations(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Check incoming message for matches in mappings."""
 
     def set_memory(mapping):
