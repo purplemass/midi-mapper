@@ -188,5 +188,7 @@ def test_set_initial_bank(mappings_bank_set):
     assert store.get('active_bank') == 0
 
     midi = result[0]
-    translate_and_send(check_mappings(process_midi(midi)))
+    ret = check_mappings(process_midi(midi))
+    assert len(ret['translations']) == 1
+    translate_and_send(ret['translations'][0])
     assert store.get('active_bank') == 1

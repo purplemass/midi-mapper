@@ -39,13 +39,13 @@ def run() -> None:
     translated_stream = midi_stream.pipe(
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: check_mappings(x)),
-        ops.filter(lambda x: x['translations']),
+        ops.flat_map(lambda x: x['translations']),
     )
 
     translated_stream.pipe(
         ops.map(lambda x: translate_and_send(x)),
         ops.do_action(lambda x: log(x)),
-    ).subscribe()
+    ).subscribe(on_error=lambda x: print(f'ERROR: {x}'))
 
     # send initial bank to reset controller
     set_initial_bank(1)

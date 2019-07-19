@@ -148,12 +148,13 @@ def test_check_mappings_bank1(mappings_bank1):
 
 
 def test_check_log(mappings_bank1):
+    store.update('mappings', mappings_bank1)
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=2, note=33, velocity=0)
     ret = check_mappings(process_midi(midi))
     assert len(ret['translations']) == 1
-    log(ret)
+    log(translate_and_send(ret['translations'][0]))
 
 
 def test_translate_and_send0(mappings_bank0):
@@ -161,16 +162,24 @@ def test_translate_and_send0(mappings_bank0):
     store.update('active_bank', 0)
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
+    ret = check_mappings(process_midi(midi))
     assert len(ret['translations']) == 1
+
+    ret = translate_and_send(ret['translations'][0])
+    assert ret['type'] == midi.type
+    assert int(ret['channel']) == midi.channel + 1
+    assert int(ret['control']) == midi.note
 
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
+    ret = check_mappings(process_midi(midi))
     assert len(ret['translations']) == 1
+
+    ret = translate_and_send(ret['translations'][0])
+    assert ret['type'] == midi.type
+    assert int(ret['channel']) == midi.channel + 1
+    assert int(ret['control']) == midi.note
 
 
 def test_translate_and_send1(mappings_bank1):
@@ -178,16 +187,26 @@ def test_translate_and_send1(mappings_bank1):
     store.update('active_bank', 0)
 
     midi = Message(type='note_on', channel=0, note=11, velocity=0)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
+    ret = check_mappings(process_midi(midi))
     assert len(ret['translations']) == 0
 
     store.update('active_bank', 1)
 
     midi = Message(type='note_on', channel=2, note=33, velocity=0)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
+    ret = check_mappings(process_midi(midi))
     assert len(ret['translations']) == 1
+
+    ret = translate_and_send(ret['translations'][0])
+    assert ret['type'] == midi.type
+    assert int(ret['channel']) == midi.channel + 1
+    assert int(ret['control']) == midi.note
+
+
+def send_midi_through_the_stream(midi):
+    ret = check_mappings(process_midi(midi))
+    if ret['translations']:
+        return translate_and_send(ret['translations'][0])
+    return None
 
 
 def test_check_mappings_bank_set(mappings_bank_set):
@@ -195,15 +214,15 @@ def test_check_mappings_bank_set(mappings_bank_set):
     store.update('active_bank', 0)
 
     midi = Message(type='note_on', channel=15, note=1, velocity=0)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 0
 
     midi = Message(type='note_on', channel=4, note=55, velocity=0)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 1
 
     midi = Message(type='note_on', channel=5, note=66, velocity=0)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 2
 
 
@@ -218,46 +237,46 @@ def test_check_memory(mappings_bank_set):
 
     # no bank selected the next messages should be ignored
     midi = Message(type='control_change', channel=6, control=77, value=64)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     midi = Message(type='control_change', channel=7, control=88, value=89)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 0
     assert store.get('mappings')[bank1_element]['memory'] == 0
     assert store.get('mappings')[bank2_element]['memory'] == 0
 
     # change to bank 1
     midi = Message(type='note_on', channel=4, note=55, velocity=0)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 1
     # bank1_element should change, bank2_element unchanged
     midi = Message(type='control_change', channel=6, control=77, value=78)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     midi = Message(type='control_change', channel=7, control=88, value=89)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('mappings')[bank1_element]['memory'] == 78
     assert store.get('mappings')[bank2_element]['memory'] == 0
 
     # change to bank 2
     midi = Message(type='note_on', channel=5, note=66, velocity=0)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 2
     # bank2_element should change, bank1_element unchanged
     midi = Message(type='control_change', channel=6, control=77, value=127)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     midi = Message(type='control_change', channel=7, control=88, value=89)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('mappings')[bank1_element]['memory'] == 78
     assert store.get('mappings')[bank2_element]['memory'] == 89
 
     # change to bank 1
     midi = Message(type='note_on', channel=4, note=55, velocity=0)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('active_bank') == 1
     # bank1_element should change, bank2_element unchanged
     midi = Message(type='control_change', channel=6, control=77, value=127)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     midi = Message(type='control_change', channel=7, control=88, value=89)
-    translate_and_send(check_mappings(process_midi(midi)))
+    send_midi_through_the_stream(midi)
     assert store.get('mappings')[bank1_element]['memory'] == 127
     assert store.get('mappings')[bank2_element]['memory'] == 89
 
@@ -267,20 +286,17 @@ def test_calculate_range(mappings_bank_set):
     store.update('active_bank', 1)
 
     midi = Message(type='control_change', channel=6, control=77, value=17)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
-    expected = calculate_range(ret['translations'][0]['o-range'], 17)
-    assert ret['msg']['level'] == expected
+    ret = send_midi_through_the_stream(midi)
+    expected = calculate_range(ret['o-range'], 17)
+    assert ret['o-level'] == expected
 
     midi = Message(type='control_change', channel=6, control=77, value=101)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
-    expected = calculate_range(ret['translations'][0]['o-range'], 101)
-    assert ret['msg']['level'] == expected
+    ret = send_midi_through_the_stream(midi)
+    expected = calculate_range(ret['o-range'], 101)
+    assert ret['o-level'] == expected
 
     store.update('active_bank', 2)
     midi = Message(type='control_change', channel=7, control=88, value=89)
-    ret = translate_and_send(
-        check_mappings(process_midi(midi)))
-    expected = calculate_range(ret['translations'][0]['o-range'], 89)
-    assert ret['msg']['level'] == expected
+    ret = send_midi_through_the_stream(midi)
+    expected = calculate_range(ret['o-range'], 89)
+    assert ret['o-level'] == expected

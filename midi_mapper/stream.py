@@ -33,6 +33,10 @@ def process_midi(midi: Message) -> Dict[str, Any]:
 def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
     """Check incoming message for matches in mappings."""
 
+    def set_memory(mapping):
+        mapping['memory'] = data['msg']['level']
+        return mapping
+
     def check(mapping):
         return (
             mapping['type'] == data['msg']['type'] and
@@ -43,7 +47,7 @@ def check_mappings(data: Dict[str, Any]) -> Dict[str, Any]:
         )
 
     mappings = store.get('mappings')
-    data['translations'] = [mapping for mapping in mappings if check(mapping)]
+    data['translations'] = [set_memory(m) for m in mappings if check(m)]
     return data
 
 
@@ -57,34 +61,33 @@ def calculate_range(range_: str, level: int) -> int:
     return level
 
 
-def translate_and_send(data: Dict[str, Any]) -> Dict[str, Any]:
+def translate_and_send(translation: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
-    for translation in data['translations']:
-        if translation['o-type'] == 'bank_change':
-            store.update('active_bank', int(translation['o-control']))
-            reset_banks_and_controls()
-        else:
-            translation['memory'] = data['msg']['level']
-            data['msg']['level'] = calculate_range(
-                translation['o-range'], data['msg']['level'])
-            send_message({
-                'type': translation['o-type'],
-                'channel': int(translation['o-channel']) - 1,
-                'status': translation['o-control'],
-                'level': data['msg']['level'],
-            })
-    return data
+    level = translation['memory']
+
+    if translation['o-type'] == 'bank_change':
+        store.update('active_bank', int(translation['o-control']))
+        reset_banks_and_controls()
+    else:
+        level = calculate_range(translation['o-range'], level)
+        send_message({
+            'type': translation['o-type'],
+            'channel': int(translation['o-channel']) - 1,
+            'status': translation['o-control'],
+            'level': level,
+        })
+    translation['o-level'] = level
+    return translation
 
 
-def log(data: Dict[str, Any]) -> None:
+def log(translation: Dict[str, Any]) -> None:
     """Log messages to console."""
     formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
-    for translation in data['translations']:
-        print(formatter.format(
-            store.get('active_bank'),
-            translation['input-device'],
-            translation['description'],
-            translation['output-device'],
-            translation['o-description'],
-            data['msg']['level'],
-        ))
+    print(formatter.format(
+        store.get('active_bank'),
+        translation['input-device'],
+        translation['description'],
+        translation['output-device'],
+        translation['o-description'],
+        translation['o-level'],
+    ))

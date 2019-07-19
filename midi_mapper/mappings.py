@@ -37,5 +37,6 @@ def csv_dict_list(filename: str) -> List[Dict[str, Any]]:
         data: List[Dict[str, Any]] = list(csv.DictReader(fd, fieldnames))
 
     for d in data:
+        d['o-level'] = 0
         d['memory'] = 0
     return data
