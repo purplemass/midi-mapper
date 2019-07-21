@@ -46,32 +46,48 @@ def get_translations(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [set_memory(m) for m in mappings if check(m)]
 
 
-def calculate_range(range_: str, level: int) -> int:
-    """Calculate range and apply to level."""
-    if (range_ is not None and type(range_) == str and
-            len(range_.split('-')) == 2):
-        low, high = range_.split('-')
-        new_level = level * ((int(high) - int(low)) / 127) + int(low)
-        return int(new_level)
-    return level
-
-
 def translate_and_send(translation: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
-    level = translation['memory']
-
-    if translation['o-type'] == 'bank_change':
-        set_bank(int(translation['o-control']))
+    if translation['o-type'].startswith('mm_'):
+        process_mapper_types(translation)
     else:
-        level = calculate_range(translation['o-range'], level)
-        send_message({
-            'type': translation['o-type'],
-            'channel': int(translation['o-channel']) - 1,
-            'status': translation['o-control'],
-            'level': level,
-        })
-    translation['o-level'] = level
+        process_standard_types(translation)
     return translation
+
+
+def log(translation: Dict[str, Any]) -> None:
+    """Log messages to console."""
+    formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
+    print(formatter.format(
+        store.get('active_bank'),
+        translation['input-device'],
+        translation['description'],
+        translation['output-device'],
+        translation['o-description'],
+        translation['o-level'],
+    ))
+
+
+def process_standard_types(translation: Dict[str, Any]) -> None:
+    """Process standard type messages."""
+    level = calculate_range(translation['o-range'], translation['memory'])
+    send_message({
+        'type': translation['o-type'],
+        'channel': int(translation['o-channel']) - 1,
+        'status': translation['o-control'],
+        'level': level,
+    })
+    translation['o-level'] = level
+
+
+def process_mapper_types(translation: Dict[str, Any]) -> None:
+    """Process midi mapper special type messages.
+
+    These are:
+        mm_bank_change where o-control is set to the bank number
+    """
+    if translation['o-type'] == 'mm_bank_change':
+        set_bank(int(translation['o-control']))
 
 
 def set_bank(active_bank: int, initial=False) -> None:
@@ -80,7 +96,7 @@ def set_bank(active_bank: int, initial=False) -> None:
     Reset controls to their memory value.
     """
     mappings = store.get('mappings')
-    controls = [m for m in mappings if m['o-type'] == 'bank_change']
+    controls = [m for m in mappings if 'mm_bank_change' in m['o-type']]
     # Check if passed bank is valid
     if not [c for c in controls if (int(c['o-control']) == active_bank)]:
         return
@@ -106,14 +122,11 @@ def set_bank(active_bank: int, initial=False) -> None:
         })
 
 
-def log(translation: Dict[str, Any]) -> None:
-    """Log messages to console."""
-    formatter = '[{}] | {:12.12} | {:10.10} | => | {:12.12} | {:25.25} | {:>3}'
-    print(formatter.format(
-        store.get('active_bank'),
-        translation['input-device'],
-        translation['description'],
-        translation['output-device'],
-        translation['o-description'],
-        translation['o-level'],
-    ))
+def calculate_range(range_: str, level: int) -> int:
+    """Calculate range and apply to level."""
+    if (range_ is not None and type(range_) == str and
+            len(range_.split('-')) == 2):
+        low, high = range_.split('-')
+        new_level = level * ((int(high) - int(low)) / 127) + int(low)
+        return int(new_level)
+    return level

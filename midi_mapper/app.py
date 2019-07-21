@@ -17,6 +17,7 @@ from .utils import set_io_ports
 
 
 def signal_handler(*args) -> None:
+    """Handle keyboard interupt and close all ports."""
     print('\033[H\033[J')
     print('Keyboard interupt detected\n')
     for port in store.get('inports').ports + store.get('outports').ports:
