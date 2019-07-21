@@ -177,3 +177,38 @@ def mappings_bank_set():
         ('o-range', '100-110'),
         ('memory', 0)])
     return [e1, e2, e3, e4]
+
+
+@pytest.fixture()
+def mappings_program_change():
+    e1 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Button1'),
+        ('type', 'note_on'),
+        ('bank', '0'),
+        ('channel', '9'),
+        ('control', '99'),
+        ('=>', '=>'),
+        ('output-device', 'Program Change'),
+        ('o-description', 'Program Change 1'),
+        ('o-type', 'mm_program_change'),
+        ('o-channel', '16'),
+        ('o-control', '1'),
+        ('o-range', ''),
+        ('memory', 0)])
+    e2 = dict([
+        ('input-device', 'TestControllerIn'),
+        ('description', 'Button2'),
+        ('type', 'note_on'),
+        ('bank', '0'),
+        ('channel', '10'),
+        ('control', '111'),
+        ('=>', '=>'),
+        ('output-device', 'Program Change'),
+        ('o-description', 'Program Change 2'),
+        ('o-type', 'mm_program_change'),
+        ('o-channel', '16'),
+        ('o-control', '2'),
+        ('o-range', ''),
+        ('memory', 0)])
+    return [e1, e2]

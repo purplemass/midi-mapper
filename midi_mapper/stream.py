@@ -84,10 +84,13 @@ def process_mapper_types(translation: Dict[str, Any]) -> None:
     """Process midi mapper special type messages.
 
     These are:
-        mm_bank_change where o-control is set to the bank number
+        mm_bank_change    : where o-control is set to the bank number
+        mm_program_change : where o-channel/o-control are set appropriately
     """
     if translation['o-type'] == 'mm_bank_change':
         set_bank(int(translation['o-control']))
+    elif translation['o-type'] == 'mm_program_change':
+        program_change(int(translation['o-control']))
 
 
 def set_bank(active_bank: int, initial=False) -> None:
@@ -120,6 +123,24 @@ def set_bank(active_bank: int, initial=False) -> None:
             'status': int(reset['control']),
             'level': int(reset['memory']),
         })
+
+
+def program_change(active_program: int) -> None:
+    """Send program_change messaage along with resets and light on."""
+    mappings = store.get('mappings')
+    controls = [m for m in mappings if 'mm_program_change' in m['o-type']]
+    for control in controls:
+        channel, status = int(control['channel']) - 1, int(control['control'])
+        if int(control['o-control']) != active_program:
+            send_message({'type': 'note_off', 'channel': channel,
+                          'status': status, 'level': 0})
+        else:
+            send_message({'type': 'note_on', 'channel': channel,
+                          'status': status, 'level': 127})
+            # Send program_change
+            send_message({'type': 'program_change',
+                          'channel': int(control['o-channel']) - 1,
+                          'status': int(control['o-control']), 'level': None})
 
 
 def calculate_range(range_: str, level: int) -> int:

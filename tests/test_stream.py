@@ -1,4 +1,6 @@
 """Test functions related to midi stream."""
+from unittest.mock import patch
+
 from mido import Message
 
 from midi_mapper.stream import get_translations
@@ -315,3 +317,53 @@ def test_set_bank(mappings_bank_set):
 
     set_bank(1, initial=True)
     assert store.get('active_bank') == 1
+
+
+@patch('midi_mapper.stream.program_change')
+def test_program_change1(program_change_mock, mappings_program_change):
+    store.update('mappings', mappings_program_change)
+    store.update('active_bank', 0)
+
+    assert program_change_mock.called is False
+    assert program_change_mock.call_count == 0
+
+    # Program change 1
+    midi = Message(type='note_on', channel=8, note=99, velocity=127)
+    send_midi_through_the_stream(midi)
+    assert program_change_mock.called is True
+    assert program_change_mock.call_count == 1
+    expected = int(mappings_program_change[0]['o-control'])
+    program_change_mock.assert_called_with(expected)
+    # Program change 2
+    midi = Message(type='note_on', channel=9, note=111, velocity=127)
+    send_midi_through_the_stream(midi)
+    expected = int(mappings_program_change[1]['o-control'])
+    program_change_mock.assert_called_with(expected)
+    assert program_change_mock.call_count == 2
+
+
+@patch('midi_mapper.stream.send_message')
+def test_program_change2(send_message_mock, mappings_program_change):
+    store.update('mappings', mappings_program_change)
+    store.update('active_bank', 0)
+
+    assert send_message_mock.called is False
+    assert send_message_mock.call_count == 0
+
+    # Program change 1
+    midi = Message(type='note_on', channel=8, note=99, velocity=127)
+    send_midi_through_the_stream(midi)
+    assert send_message_mock.called is True
+    assert send_message_mock.call_count == 3
+    calls = send_message_mock.call_args_list
+    assert calls[0][0][0]['type'] == 'note_on'
+    assert calls[1][0][0]['type'] == 'program_change'
+    assert calls[2][0][0]['type'] == 'note_off'
+    # Program change 2
+    midi = Message(type='note_on', channel=9, note=111, velocity=127)
+    send_midi_through_the_stream(midi)
+    assert send_message_mock.call_count == 6
+    calls = send_message_mock.call_args_list
+    assert calls[3][0][0]['type'] == 'note_off'
+    assert calls[4][0][0]['type'] == 'note_on'
+    assert calls[5][0][0]['type'] == 'program_change'

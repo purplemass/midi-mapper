@@ -19,7 +19,6 @@ class Store(BehaviorSubject):
 
 store = Store({
     'active_bank': 0,
-    'active_programe': None,
     'mappings': [],
     'inports': None,
     'outports': None,

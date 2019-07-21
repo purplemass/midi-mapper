@@ -20,11 +20,9 @@ def test_main_loop(mocked_sleep):
 
 store = Store({
     'active_bank': 0,
-    'active_programe': None,
     'mappings': [],
     'inports': MultiPort([]),
     'outports': MultiPort([]),
-    'midi_stream': None,
 })
 
 
