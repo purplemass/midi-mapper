@@ -28,8 +28,7 @@ def no_io(monkeypatch):
 def test_set_io_ports(no_io):
     assert store.get('inports') is None
     assert store.get('outports') is None
-    store.update('midi_stream', Subject())
-    set_io_ports()
+    set_io_ports(Subject())
     assert store.get('inports').ports == []
     assert store.get('outports').ports == []
 
@@ -40,25 +39,25 @@ def test_input_message():
     def on_next(x):
         result.append(x)
 
-    midi_stream = store.get('midi_stream')
+    midi_stream = Subject()
     midi_stream.subscribe(on_next=on_next)
 
     midi = Message(type='control_change', channel=0, control=1, value=64)
 
-    input_message(Message(type='clock'))
+    input_message(Message(type='clock'), midi_stream)
     assert result == []
-    input_message(midi)
-    input_message(Message(type='start'))
+    input_message(midi, midi_stream)
+    input_message(Message(type='start'), midi_stream)
     assert result == [midi]
-    input_message(Message(type='stop'))
+    input_message(Message(type='stop'), midi_stream)
     assert result == [midi]
-    input_message(midi)
+    input_message(midi, midi_stream)
     assert result == [midi, midi]
-    input_message(Message(type='clock'))
+    input_message(Message(type='clock'), midi_stream)
     assert result == [midi, midi]
-    input_message(Message(type='songpos'))
+    input_message(Message(type='songpos'), midi_stream)
     assert result == [midi, midi]
-    input_message(Message(type='sysex'))
+    input_message(Message(type='sysex'), midi_stream)
     assert result == [midi, midi]
 
 

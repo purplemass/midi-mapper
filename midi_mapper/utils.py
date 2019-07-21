@@ -7,32 +7,40 @@ import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
+from rx.subject import Subject
+
 from .constants import REAL_TIME_MESSAGES
 from .constants import SYSTEM_COMMON_MESSAGES
 from .store import store
 
 
-def input_message(midi: Message) -> None:
+def input_message(midi: Message, midi_stream: Subject) -> None:
     """Emit valid messages onto midi_stream."""
     if midi.type in SYSTEM_COMMON_MESSAGES:
         return
     if midi.type in REAL_TIME_MESSAGES:
         return
 
-    store.get('midi_stream').on_next(midi)
+    midi_stream.on_next(midi)
+
     if '-v' in sys.argv:  # pragma: no cover
         print('{:35.35}> | {}'.format(100 * '=', midi))
 
 
-def set_io_ports() -> None:
+def set_io_ports(midi_stream: Subject) -> None:
     """Create input/output ports and add incoming messages to the stream."""
+
+    def input_message_passer(midi: Message):  # pragma: no cover
+        """Pass midi_stream to input_message."""
+        input_message(midi, midi_stream)
+
     input_names = mido.get_input_names()
     output_names = mido.get_output_names()
     print(f'input_names: {input_names}')
     print(f'output_names: {output_names}')
     inports = MultiPort(
         [mido.open_input(
-            device, callback=input_message) for device in input_names])
+            device, callback=input_message_passer) for device in input_names])
     outports = MultiPort(
         [mido.open_output(device) for device in output_names])
     print('ports ready\n\tin: {}\n\tout: {}'.format(
@@ -47,8 +55,7 @@ def send_message(msg: Dict[str, Any]) -> None:
         return
 
     if type(msg['status']) == str and len(msg['status'].split(':')) == 2:
-        midi_notes = create_nrpn(msg)
-        for midi in midi_notes:
+        for midi in create_nrpn(msg):
             store.get('outports').send(midi)
     else:
         store.get('outports').send(create_midi(msg))

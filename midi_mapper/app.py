@@ -16,7 +16,7 @@ from .stream import set_bank
 from .utils import set_io_ports
 
 
-def signal_handler(signal, frame) -> None:
+def signal_handler(*args) -> None:
     print('\033[H\033[J')
     print('Keyboard interupt detected\n')
     for port in store.get('inports').ports + store.get('outports').ports:
@@ -30,11 +30,8 @@ def run() -> None:
     """Update store, create streams and run the main loop."""
 
     midi_stream = Subject()
-
     store.update('mappings', import_mappings())
-    store.update('midi_stream', midi_stream)
-
-    set_io_ports()
+    set_io_ports(midi_stream)
 
     translations_stream = midi_stream.pipe(
         ops.map(lambda x: process_midi(x)),
@@ -56,6 +53,5 @@ def run() -> None:
 
 if __name__ == "__main__":  # pragma: no cover
     """Add keyboard interupt handler and run application."""
-
     signal.signal(signal.SIGINT, signal_handler)
     run()
