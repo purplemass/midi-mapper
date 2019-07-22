@@ -10,7 +10,7 @@ MAPPINGS_FOLDER = './mappings/'
 
 def import_mappings() -> List[Dict[str, Any]]:
     """List and import CSV files in the specified folder."""
-    data: List = []
+    data: List[Dict[str, Any]] = []
     files = filter(lambda x: x.endswith('.csv'), listdir(MAPPINGS_FOLDER))
     for filename in files:
         csv = csv_dict_list(f'{MAPPINGS_FOLDER}/{filename}')

@@ -143,6 +143,7 @@ def test_get_translations_bank1(mappings_bank1):
     assert len(ret) == 1
 
 
+@patch('midi_mapper.stream.print', lambda _: [])
 def test_check_log(mappings_bank1):
     store.update('mappings', mappings_bank1)
     store.update('active_bank', 1)

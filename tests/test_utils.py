@@ -1,6 +1,8 @@
 """Test functions related to midi utils."""
 import pytest
 
+from unittest.mock import patch
+
 import mido
 from mido import Message
 
@@ -25,6 +27,7 @@ def no_io(monkeypatch):
     monkeypatch.setattr(mido, 'get_output_names', get_io_names_mock)
 
 
+@patch('midi_mapper.utils.print', lambda _: [])
 def test_set_io_ports(no_io):
     assert store.get('inports') is None
     assert store.get('outports') is None

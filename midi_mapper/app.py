@@ -34,13 +34,10 @@ def run() -> None:
     store.update('mappings', import_mappings())
     set_io_ports(midi_stream)
 
-    translations_stream = midi_stream.pipe(
+    midi_stream.pipe(
         ops.map(lambda x: process_midi(x)),
         ops.map(lambda x: get_translations(x)),
         ops.flat_map(lambda x: x),
-    )
-
-    translations_stream.pipe(
         ops.map(lambda x: translate_and_send(x)),
         ops.do_action(lambda x: log(x)),
     ).subscribe(on_error=lambda x: print(f'ERROR: {x}'))
