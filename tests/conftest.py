@@ -180,7 +180,7 @@ def mappings_bank_set():
 
 
 @pytest.fixture()
-def mappings_program_change():
+def mappings_set_program():
     e1 = dict([
         ('input-device', 'TestControllerIn'),
         ('description', 'Button1'),

@@ -90,7 +90,7 @@ def process_mapper_types(translation: Dict[str, Any]) -> None:
     if translation['o-type'] == 'mm_bank_change':
         set_bank(int(translation['o-control']))
     elif translation['o-type'] == 'mm_program_change':
-        program_change(int(translation['o-control']))
+        set_program(int(translation['o-control']))
 
 
 def set_bank(active_bank: int, initial=False) -> None:
@@ -125,7 +125,7 @@ def set_bank(active_bank: int, initial=False) -> None:
         })
 
 
-def program_change(active_program: int) -> None:
+def set_program(active_program: int) -> None:
     """Send program_change messaage along with resets and light on."""
     mappings = store.get('mappings')
     controls = [m for m in mappings if 'mm_program_change' in m['o-type']]
