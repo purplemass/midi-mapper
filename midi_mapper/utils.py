@@ -28,14 +28,17 @@ def input_message(midi: Message, midi_stream: Subject) -> None:
 
 
 def set_io_ports(midi_stream: Subject) -> None:
-    """Create input/output ports and add incoming messages to the stream."""
+    """Create input/output ports and add incoming messages to the stream.
+
+    Ignore Raspberyy Pi's 'Midi Through' port."""
+    BAD_PORT = 'Midi Through'
 
     def input_message_passer(midi: Message):  # pragma: no cover
         """Pass midi_stream to input_message."""
         input_message(midi, midi_stream)
 
-    input_names = mido.get_input_names()
-    output_names = mido.get_output_names()
+    input_names = [n for n in mido.get_input_names() if BAD_PORT not in n]
+    output_names = [n for n in mido.get_output_names() if BAD_PORT not in n]
     print(f'input_names: {input_names}')
     print(f'output_names: {output_names}')
     inports = MultiPort(

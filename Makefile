@@ -16,6 +16,5 @@ test-cover:
 cover:
 	clear; coverage report -m ./midi_mapper/*.py
 
-
 put:
 	scp -r ./* pi@192.168.1.11:/home/pi/midi_mapper/
