@@ -1,5 +1,5 @@
 """Test functions related to midi stream."""
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from mido import Message
 
@@ -80,6 +80,27 @@ def test_process_real_time(real_time):
         'status': None,
         'level': None,
     }
+
+
+@patch('midi_mapper.stream.send_message')
+def test_real_time1(send_message_mock, mappings_real_time):
+    store.update('mappings', mappings_real_time)
+
+    midi = Message(type='note_on', channel=0, note=1, velocity=127)
+    send_midi_through_the_stream(midi)
+    assert send_message_mock.called is True
+    assert send_message_mock.call_count == 1
+    cmd = mappings_real_time[0]['o-type']
+    expected = call(
+        {'type': cmd, 'channel': None, 'status': None, 'level': None})
+    assert send_message_mock.call_args == expected
+
+
+def test_real_time2(mappings_real_time):
+    store.update('mappings', mappings_real_time)
+
+    midi = Message(type='note_on', channel=0, note=1, velocity=127)
+    send_midi_through_the_stream(midi)
 
 
 def test_get_translations_bank0(mappings_bank0):

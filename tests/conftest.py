@@ -44,6 +44,28 @@ def real_time(request):
     return Message(type=request.param)
 
 
+@pytest.fixture(params=REAL_TIME_MESSAGES)
+def mappings_real_time(request):
+    return [dict([
+        ('input-device', 'TestStart'),
+        ('description', 'Button1'),
+        ('type', 'note_on'),
+        ('bank', '0'),
+        ('channel', '1'),
+        ('control', '1'),
+        ('=>', '=>'),
+        ('output-device', 'Circuit'),
+        ('o-description', 'start'),
+        ('o-type', request.param),
+        ('o-channel', '-'),
+        ('o-control', '-'),
+        ('o-range', ''),
+        ('memory', 0)])
+    ]
+
+    return Message(type=request.param)
+
+
 @pytest.fixture()
 def mappings_bank0():
     e1 = dict([

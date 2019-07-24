@@ -110,6 +110,8 @@ def create_midi(msg: Dict[str, Any]) -> Message:
             note=int(msg['status']),
             value=msg['level'],
         )
+    elif msg['type'] in REAL_TIME_MESSAGES:
+        return Message(type=msg['type'])
 
 
 def create_nrpn(msg: Dict[str, Any]) -> List[Message]:

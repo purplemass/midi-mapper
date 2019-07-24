@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 
 from mido import Message  # type: ignore
 
+from .constants import REAL_TIME_MESSAGES
 from .constants import STANDARD_MESSAGES
 from .store import store
 from .utils import send_message
@@ -52,6 +53,8 @@ def translate_and_send(translation: Dict[str, Any]) -> Dict[str, Any]:
     """Translate messages and send."""
     if translation['o-type'].startswith('mm_'):
         process_mapper_types(translation)
+    elif translation['o-type'] in REAL_TIME_MESSAGES:
+        process_real_time_types(translation)
     else:
         process_standard_types(translation)
     return translation
@@ -80,6 +83,16 @@ def process_standard_types(translation: Dict[str, Any]) -> None:
         'level': level,
     })
     translation['o-level'] = level
+
+
+def process_real_time_types(translation: Dict[str, Any]) -> None:
+    """Process real time messages."""
+    send_message({
+        'type': translation['o-type'],
+        'channel': None,
+        'status': None,
+        'level': None,
+    })
 
 
 def process_mapper_types(translation: Dict[str, Any]) -> None:
