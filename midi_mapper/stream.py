@@ -35,11 +35,13 @@ def get_translations(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     def check(mapping):
         return (
-            mapping['type'] == data['type'] and
-            int(mapping['channel']) == data['channel'] and
-            int(mapping['control']) == data['status'] and
-            (int(mapping['bank']) == 0 or
-                int(mapping['bank']) == store.get('active_bank'))
+            mapping['type'] == data['type']
+            and int(mapping['channel']) == data['channel']
+            and int(mapping['control']) == data['status']
+            and (
+                int(mapping['bank']) == 0
+                or int(mapping['bank']) == store.get('active_bank')
+            )
         )
 
     mappings = store.get('mappings')
@@ -145,8 +147,8 @@ def set_program(active_program: int) -> None:
 
 def calculate_range(range_: str, level: int) -> int:
     """Calculate range and apply to level."""
-    if (range_ is not None and type(range_) == str and
-            len(range_.split('-')) == 2):
+    if (range_ is not None and type(range_) == str
+            and len(range_.split('-')) == 2):
         low, high = range_.split('-')
         new_level = level * ((int(high) - int(low)) / 127) + int(low)
         return int(new_level)
