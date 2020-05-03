@@ -27,7 +27,7 @@ def csv_dict_list(filename: str) -> List[Dict[str, Any]]:
     with open(filename, 'r') as fd:
         reader = csv.reader(fd, delimiter=',')
         fieldnames = next(reader)
-        fieldnames = [f.lower().replace(' ', '-') for f in fieldnames]
+        fieldnames = [f.lower().replace(' ', '') for f in fieldnames]
         prefix_output_fieldname = False
         for idx, name in enumerate(fieldnames):
             if prefix_output_fieldname is True:
@@ -39,4 +39,7 @@ def csv_dict_list(filename: str) -> List[Dict[str, Any]]:
     for d in data:
         d['o-level'] = 0
         d['memory'] = 0
+        # strip value in case CSV file has extra spaces in it
+        for key in d.keys():
+            d[key] = str(d[key]).strip()
     return data
