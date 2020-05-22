@@ -22,5 +22,8 @@ put:
 open-midi-in:
 	clear; python3 playground/open-midi-in.py
 
+open-midi-out:
+	clear; python3 playground/open-midi-out.py
+
 random-notes:
 	clear; python3 playground/random-notes.py
