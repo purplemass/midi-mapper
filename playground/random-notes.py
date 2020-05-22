@@ -12,6 +12,7 @@ import sys
 
 from threading import Thread
 from time import sleep
+from typing import List, Tuple
 
 import rtmidi
 
@@ -66,7 +67,7 @@ def play_note(midiout, composition, index) -> None:
     # sleep(composition['delay3'])
 
 
-def create_compositions():
+def create_compositions() -> Tuple[List[object], List[int]]:
     compositions = []
     for i in range(CONCURRENT_NOTES):
         compositions.append(compose())
@@ -83,8 +84,12 @@ def run(midiout) -> None:
     global compositions
 
     compositions, delays = create_compositions()
-    main_delay = int(delays[-1]) - (CONCURRENT_NOTES / 10)
-    main_delay = int(delays[-1]) - 0.5 - random.random() * 3
+    # main_delay = int(delays[-1]) - 0.5 - random.random() * 3
+    main_delay = (CONCURRENT_NOTES / (CONCURRENT_NOTES + 2))
+    main_delay = abs(main_delay - abs(random.random()))
+    if main_delay < 0.70:
+        main_delay += 0.45
+    print(main_delay)
 
     with midiout:
         for i in range(1, 1000):
@@ -107,17 +112,25 @@ def run(midiout) -> None:
                 compositions, delays = create_compositions()
             compositions, delays = create_compositions()
 
+    clean_up()
+
+
+def clean_up(*args) -> None:
+    global compositions, midiout
+    print(50 * '>')
+    print('clean_up')
+    print(50 * '<')
+    for composition in compositions:
+        print(composition['off'])
+        midiout.send_message(composition['off'])
     del midiout
 
 
 def signal_handler(*args) -> None:
     """Handle keyboard interrupt and close all ports."""
-    global compositions, midiout
     print('\033[H\033[J')
     print('Keyboard interrupt detected\n')
-    for composition in compositions:
-        print(composition['off'])
-        midiout.send_message(composition['off'])
+    clean_up()
     sys.exit(0)
 
 
