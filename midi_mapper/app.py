@@ -17,9 +17,9 @@ from .utils import set_io_ports
 
 
 def signal_handler(*args) -> None:
-    """Handle keyboard interupt and close all ports."""
+    """Handle keyboard interrupt and close all ports."""
     print('\033[H\033[J')
-    print('Keyboard interupt detected\n')
+    print('Keyboard interrupt detected\n')
     for port in store.get('inports').ports + store.get('outports').ports:
         if port.closed is False:  # pragma: no cover
             print(f'Closing {port}')
@@ -50,6 +50,6 @@ def run() -> None:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    """Add keyboard interupt handler and run application."""
+    """Add keyboard interrupt handler and run application."""
     signal.signal(signal.SIGINT, signal_handler)
     run()

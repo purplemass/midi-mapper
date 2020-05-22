@@ -111,10 +111,10 @@ def run(midiout) -> None:
 
 
 def signal_handler(*args) -> None:
-    """Handle keyboard interupt and close all ports."""
+    """Handle keyboard interrupt and close all ports."""
     global compositions, midiout
     print('\033[H\033[J')
-    print('Keyboard interupt detected\n')
+    print('Keyboard interrupt detected\n')
     for composition in compositions:
         print(composition['off'])
         midiout.send_message(composition['off'])
@@ -122,6 +122,6 @@ def signal_handler(*args) -> None:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    """Add keyboard interupt handler and run application."""
+    """Add keyboard interrupt handler and run application."""
     signal.signal(signal.SIGINT, signal_handler)
     run(midiout)
