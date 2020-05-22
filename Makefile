@@ -18,3 +18,6 @@ cover:
 
 put:
 	scp -r ./* pi@raspberrypi.local:/home/pi/
+
+random-notes:
+	clear; python3 playground/random-notes.py
