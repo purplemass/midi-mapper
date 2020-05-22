@@ -34,7 +34,7 @@ def test_import_mappings_dummy_csv():
     assert data[0]['channel'] == '1'
     assert data[0]['output-device'] == 'DeviceOut'
     assert data[0]['o-channel'] == '11'
-    assert data[0]['memory'] == 0
+    assert data[0]['memory'] == '0'
     assert data[1]['channel'] == '2'
     assert data[1]['o-channel'] == '12'
-    assert data[1]['memory'] == 0
+    assert data[1]['memory'] == '0'
