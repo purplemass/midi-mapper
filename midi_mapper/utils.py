@@ -30,8 +30,11 @@ def input_message(midi: Message, midi_stream: Subject) -> None:
 def set_io_ports(midi_stream: Subject) -> None:
     """Create input/output ports and add incoming messages to the stream.
 
+    Create virtual output port.
+
     Ignore Raspberyy Pi's 'Midi Through' port."""
     BAD_PORT = 'Midi Through'
+    VIRTUAL_PORT = 'PythonMidi'
 
     def input_message_passer(midi: Message):  # pragma: no cover
         """Pass midi_stream to input_message."""
@@ -44,8 +47,9 @@ def set_io_ports(midi_stream: Subject) -> None:
     inports = MultiPort(
         [mido.open_input(
             device, callback=input_message_passer) for device in input_names])
+    virtual_port = mido.open_output(VIRTUAL_PORT, virtual=True)
     outports = MultiPort(
-        [mido.open_output(device) for device in output_names])
+        [virtual_port] + [mido.open_output(device) for device in output_names])
     print('ports ready\n\tin: {}\n\tout: {}'.format(
         len(inports.ports), len(outports.ports)))
     store.update('inports', inports)
