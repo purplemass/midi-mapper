@@ -7,7 +7,7 @@ import mido  # type: ignore
 from mido.ports import MultiPort  # type: ignore
 from mido import Message
 
-from rx.subject import Subject
+from rx.subject import Subject  # type: ignore
 
 from .constants import REAL_TIME_MESSAGES
 from .constants import SYSTEM_COMMON_MESSAGES

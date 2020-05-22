@@ -1,7 +1,7 @@
 """Store used for holding state and globals that don't change."""
 from typing import Any
 
-from rx.subject import BehaviorSubject
+from rx.subject import BehaviorSubject  # type: ignore
 
 
 class Store(BehaviorSubject):
