@@ -19,5 +19,8 @@ cover:
 put:
 	scp -r ./* pi@raspberrypi.local:/home/pi/
 
+open-midi-in:
+	clear; python3 playground/open-midi-in.py
+
 random-notes:
 	clear; python3 playground/random-notes.py
