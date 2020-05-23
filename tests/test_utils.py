@@ -33,7 +33,8 @@ def test_set_io_ports(no_io):
     assert store.get('outports') is None
     set_io_ports(Subject())
     assert store.get('inports').ports == []
-    assert store.get('outports').ports == []
+    # Virtual port in outports
+    assert len(store.get('outports').ports) == 1
 
 
 def test_input_message():
