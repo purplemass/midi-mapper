@@ -21,10 +21,10 @@ def input_message(midi: Message, midi_stream: Subject) -> None:
     if midi.type in REAL_TIME_MESSAGES:
         return
 
-    midi_stream.on_next(midi)
-
     if '-v' in sys.argv:  # pragma: no cover
         print('{:35.35}> | {}'.format(100 * '=', midi))
+    else:
+        midi_stream.on_next(midi)
 
 
 def set_io_ports(midi_stream: Subject) -> None:
@@ -57,15 +57,25 @@ def set_io_ports(midi_stream: Subject) -> None:
 
 
 def send_message(msg: Dict[str, Any]) -> None:
-    """Send MIDI or NRPN message to output ports."""
+    """Send MIDI or NRPN message.
+
+    Look up message's port in outports and use if it exists,
+    otherwise send message to all outports."""
     if store.get('outports') is None:
         return
 
+    outport = store.get('outports')
+    try:
+        # TODO: move this lookup to mappings so it's only done once
+        outport = [x for x in outport.ports if x.name == msg['port']][0]
+    except Exception:
+        pass
+
     if type(msg['status']) == str and len(msg['status'].split(':')) == 2:
         for midi in create_nrpn(msg):
-            store.get('outports').send(midi)
+            outport.send(midi)
     else:
-        store.get('outports').send(create_midi(msg))
+        outport.send(create_midi(msg))
 
 
 def create_midi(msg: Dict[str, Any]) -> Message:

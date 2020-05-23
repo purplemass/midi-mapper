@@ -81,6 +81,7 @@ def process_standard_types(translation: Dict[str, Any]) -> None:
         'channel': int(translation['o-channel']) - 1,
         'status': translation['o-control'],
         'level': level,
+        'port': translation['output-device'],
     })
     translation['o-level'] = level
 
@@ -92,6 +93,7 @@ def process_real_time_types(translation: Dict[str, Any]) -> None:
         'channel': None,
         'status': None,
         'level': None,
+        'port': translation['output-device'],
     })
 
 
@@ -124,11 +126,21 @@ def set_bank(active_bank: int, initial=False) -> None:
     for control in controls:
         channel, status = int(control['channel']) - 1, int(control['control'])
         if int(control['o-control']) != active_bank:
-            send_message({'type': 'note_off', 'channel': channel,
-                          'status': status, 'level': 0})
+            send_message({
+                'type': 'note_off',
+                'channel': channel,
+                'status': status,
+                'level': 0,
+                'port': control['output-device'],
+            })
         elif initial:
-            send_message({'type': 'note_on', 'channel': channel,
-                          'status': status, 'level': 127})
+            send_message({
+                'type': 'note_on',
+                'channel': channel,
+                'status': status,
+                'level': 127,
+                'port': control['output-device'],
+            })
 
     resets = [m for m in mappings if int(m['bank']) == active_bank]
     for reset in resets:
@@ -137,6 +149,7 @@ def set_bank(active_bank: int, initial=False) -> None:
             'channel': int(reset['channel']) - 1,
             'status': int(reset['control']),
             'level': int(reset['memory']),
+            'port': reset['input-device'],
         })
 
 
@@ -147,15 +160,29 @@ def set_program(active_program: int) -> None:
     for control in controls:
         channel, status = int(control['channel']) - 1, int(control['control'])
         if int(control['o-control']) != active_program:
-            send_message({'type': 'note_off', 'channel': channel,
-                          'status': status, 'level': 0})
+            send_message({
+                'type': 'note_off',
+                'channel': channel,
+                'status': status,
+                'level': 0,
+                'port': control['output-device'],
+            })
         else:
-            send_message({'type': 'note_on', 'channel': channel,
-                          'status': status, 'level': 127})
+            send_message({
+                'type': 'note_on',
+                'channel': channel,
+                'status': status,
+                'level': 127,
+                'port': control['output-device'],
+            })
             # Send program_change
-            send_message({'type': 'program_change',
-                          'channel': int(control['o-channel']) - 1,
-                          'status': int(control['o-control']), 'level': None})
+            send_message({
+                'type': 'program_change',
+                'channel': int(control['o-channel']) - 1,
+                'status': int(control['o-control']),
+                'level': None,
+                'port': control['output-device'],
+            })
 
 
 def calculate_range(range_: str, level: int) -> int:
